@@ -23,7 +23,7 @@ export const VakinhaLogo = ({ className = "", size = "md" }: CampaignLogoProps) 
         <Heart className={`${s.icon} fill-white text-white`} />
       </span>
       <span className={`font-display ${s.text} font-bold leading-none`}>
-        Ajude a <span className="text-primary">Duda</span>
+        Ajude a <span className="text-primary">Duda Hoje</span>
       </span>
     </div>
   );
