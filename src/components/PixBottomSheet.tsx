@@ -68,7 +68,7 @@ export const PixBottomSheet = ({ open, amount, onClose }: PixBottomSheetProps) =
     (async () => {
       try {
         const { data, error: fnErr } = await supabase.functions.invoke(
-          "create-paradise-transaction",
+          "create-inter-pix",
           { body: { amount: Math.round(amount * 100) } },
         );
         if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
@@ -100,7 +100,7 @@ export const PixBottomSheet = ({ open, amount, onClose }: PixBottomSheetProps) =
     if (!open || !pix || paid) return;
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const url = `https://${projectId}.supabase.co/functions/v1/check-paradise-transaction?id=${pix.transaction_id}`;
+    const url = `https://${projectId}.supabase.co/functions/v1/check-inter-pix?id=${pix.transaction_id}`;
     const id = setInterval(async () => {
       try {
         const r = await fetch(url, {
