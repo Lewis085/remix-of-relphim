@@ -11,7 +11,7 @@ const INTER_BASE = "https://cdpj.partners.bancointer.com.br";
 let cachedToken: { value: string; exp: number } | null = null;
 
 function normalizePem(value: string, label: string): string {
-function normalizePem(value: string, label: string): string {
+
   let v = value.trim().replace(/^(['"`])([\s\S]*)\1$/, "$2");
   v = v.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r\n/g, "\n").trim();
   const m = v.match(/-----BEGIN ([A-Z ]+)-----([\s\S]+?)-----END \1-----/);
