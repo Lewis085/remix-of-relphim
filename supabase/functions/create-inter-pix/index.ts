@@ -11,9 +11,27 @@ const PIX_KEY = "67014485000143";
 
 let cachedToken: { value: string; exp: number } | null = null;
 
+function normalizePem(value: string, label: string): string {
+  const normalized = value
+    .trim()
+    .replace(/^(['"`])(.*)\1$/s, "$2")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .trim();
+
+  if (!normalized.includes("-----BEGIN") || !normalized.includes("-----END")) {
+    throw new Error(`${label} inválido: salve o conteúdo PEM completo do arquivo`);
+  }
+
+  return normalized.endsWith("\n") ? normalized : `${normalized}\n`;
+}
+
 async function getHttpClient() {
-  const cert = Deno.env.get("INTER_CERT_PEM");
-  const key = Deno.env.get("INTER_KEY_PEM");
+  const rawCert = Deno.env.get("INTER_CERT_PEM");
+  const rawKey = Deno.env.get("INTER_KEY_PEM");
+  const cert = rawCert ? normalizePem(rawCert, "INTER_CERT_PEM") : null;
+  const key = rawKey ? normalizePem(rawKey, "INTER_KEY_PEM") : null;
   if (!cert || !key) throw new Error("INTER_CERT_PEM/INTER_KEY_PEM não configurados");
   // @ts-ignore - Deno unstable API disponível no edge runtime
   return Deno.createHttpClient({ cert, key });
