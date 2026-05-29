@@ -52,7 +52,7 @@ const Pix = () => {
 
   // Carrega dados do PIX gerados no checkout
   useEffect(() => {
-    const raw = sessionStorage.getItem("paradise_pix");
+    const raw = sessionStorage.getItem("inter_pix") ?? sessionStorage.getItem("paradise_pix");
     if (!raw) { navigate("/checkout"); return; }
     try { setPix(JSON.parse(raw)); }
     catch  { navigate("/checkout"); }
@@ -69,7 +69,7 @@ const Pix = () => {
     if (!pix || paid) return;
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const anonKey   = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const url = `https://${projectId}.supabase.co/functions/v1/check-paradise-transaction?id=${pix.transaction_id}`;
+    const url = `https://${projectId}.supabase.co/functions/v1/check-inter-pix?id=${pix.transaction_id}`;
 
     const id = setInterval(async () => {
       try {
