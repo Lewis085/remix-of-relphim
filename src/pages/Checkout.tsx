@@ -85,14 +85,14 @@ const Checkout = () => {
       const discount = Math.floor(Math.random() * 3) + 7;
       const chargeCents = Math.max(100, totalCents - discount);
 
-      const { data, error: fnErr } = await supabase.functions.invoke("create-paradise-transaction", {
+      const { data, error: fnErr } = await supabase.functions.invoke("create-inter-pix", {
         body: { amount: chargeCents },
       });
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
 
       const chargedAmount = chargeCents / 100;
       sessionStorage.setItem(
-        "paradise_pix",
+        "inter_pix",
         JSON.stringify({
           qr_code:        data.qr_code,
           qr_code_base64: data.qr_code_base64,
