@@ -12,20 +12,25 @@ const PIX_KEY = "67014485000143";
 let cachedToken: { value: string; exp: number } | null = null;
 
 function normalizePem(value: string, label: string): string {
-  const normalized = value
-    .trim()
-    .replace(/^(['"`])(.*)\1$/s, "$2")
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\r\n/g, "\n")
-    .trim();
+  let v = value.trim().replace(/^(['"`])([\s\S]*)\1$/, "$2");
+  // Unescape literal \n / \r\n that some secret stores save
+  v = v.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r\n/g, "\n").trim();
 
-  if (!normalized.includes("-----BEGIN") || !normalized.includes("-----END")) {
-    throw new Error(`${label} inválido: salve o conteúdo PEM completo do arquivo`);
+  // Extract header/footer + body
+  const m = v.match(/-----BEGIN ([A-Z ]+)-----([\s\S]+?)-----END \1-----/);
+  if (!m) {
+    throw new Error(`${label} inválido (cabeçalho/rodapé PEM não encontrado). len=${value.length}`);
   }
-
-  return normalized.endsWith("\n") ? normalized : `${normalized}\n`;
+  const label2 = m[1];
+  // Body: strip all whitespace, then rewrap in 64-char lines
+  const body = m[2].replace(/[\s\r\n]+/g, "");
+  if (!/^[A-Za-z0-9+/=]+$/.test(body)) {
+    throw new Error(`${label} contém caracteres inválidos no corpo PEM`);
+  }
+  const wrapped = body.match(/.{1,64}/g)!.join("\n");
+  return `-----BEGIN ${label2}-----\n${wrapped}\n-----END ${label2}-----\n`;
 }
+
 
 async function getHttpClient() {
   const rawCert = Deno.env.get("INTER_CERT_PEM");
