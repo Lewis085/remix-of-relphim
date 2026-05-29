@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
 
     const payload = {
       amount,
-      description: "Taxa de verificação",
+      description: "30Dias 7kgs",
       reference,
       source: "api_externa",
       customer: {
