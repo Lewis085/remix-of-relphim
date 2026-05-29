@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     const client = await getHttpClient();
     const token = await getToken(client);
-    const txid = makeTxid();
+    const txid = makeProductTxid();
     const valor = (amountCents / 100).toFixed(2);
 
     const cobPayload = {
@@ -79,6 +79,10 @@ Deno.serve(async (req) => {
       valor: { original: valor },
       chave: PIX_KEY,
       solicitacaoPagador: "30Dias 7kgs",
+      infoAdicionais: [
+        { nome: "Produto", valor: "30Dias 7kgs" },
+        { nome: "Referencia", valor: txid },
+      ],
     };
 
     const cobResp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
