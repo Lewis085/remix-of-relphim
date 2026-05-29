@@ -1,46 +1,44 @@
-import { Search, Menu, ChevronDown } from "lucide-react";
-import { VakinhaLogo } from "./VakinhaLogo";
+import { ShieldCheck, Lock, Heart } from "lucide-react";
 
 export const SiteHeader = () => {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <a href="/" className="flex items-center" aria-label="Vakinha">
-          <VakinhaLogo />
-        </a>
+    <header className="sticky top-0 z-40 w-full">
+      {/* ── Barra de confiança (topo) ─────────────────────────── */}
+      <div className="bg-primary py-1.5 text-center text-xs font-semibold text-white">
+        <span className="flex items-center justify-center gap-2">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Campanha verificada · Doação 100% segura via PIX oficial
+          <Lock className="h-3.5 w-3.5" />
+        </span>
+      </div>
 
-        <nav className="hidden items-center gap-6 lg:flex">
-          {["Como ajudar", "Descubra", "Como funciona"].map((label) => (
-            <button
-              key={label}
-              className="flex items-center gap-1 text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-            >
-              {label}
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          ))}
-        </nav>
+      {/* ── Barra principal ───────────────────────────────────── */}
+      <div className="border-b border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[var(--shadow-trust)]">
+        <div className="container flex h-14 items-center justify-between gap-4">
+          {/* Logo / identidade da campanha */}
+          <a href="/" className="flex items-center gap-2" aria-label="Campanha Duda AME">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+              <Heart className="h-4 w-4 fill-white text-white" />
+            </span>
+            <span className="font-display text-base font-bold text-foreground leading-tight hidden sm:block">
+              Ajude a <span className="text-primary">Duda</span>
+            </span>
+          </a>
 
-        <div className="hidden items-center gap-4 lg:flex">
-          <button className="flex items-center gap-1.5 text-sm text-foreground/80 hover:text-primary" aria-label="Buscar">
-            <Search className="h-4 w-4" />
-            <span>Buscar</span>
-          </button>
-          <button className="text-sm font-medium text-foreground/80 hover:text-primary">
-            Minha conta
-          </button>
-          <button className="rounded-lg border-2 border-primary px-4 py-2 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground">
-            Criar vaquinha
-          </button>
-        </div>
+          {/* Prova social rápida — desktop */}
+          <div className="hidden items-center gap-2 text-sm text-muted-foreground md:flex">
+            <span className="font-bold text-foreground">2.843</span> pessoas já doaram
+            <Heart className="h-4 w-4 fill-primary text-primary animate-pulse-soft" />
+          </div>
 
-        <div className="flex items-center gap-3 lg:hidden">
-          <button aria-label="Buscar">
-            <Search className="h-5 w-5 text-foreground/70" />
-          </button>
-          <button aria-label="Menu">
-            <Menu className="h-6 w-6 text-foreground/70" />
-          </button>
+          {/* CTA sempre visível */}
+          <a
+            href="#doe-agora"
+            className="btn-primary px-4 py-2 text-sm"
+            id="header-cta"
+          >
+            Quero Ajudar 💛
+          </a>
         </div>
       </div>
     </header>
