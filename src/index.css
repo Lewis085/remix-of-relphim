@@ -1,126 +1,100 @@
 /* ============================================================
-   PacientZero — Design System
-   Fundação de Confiança: tipografia, paleta e tokens globais.
-   Toda cor em HSL para consistência com Tailwind.
+   PacientZero — Design System v2
+   Direção estética: EDITORIAL HUMANITÁRIO
+   Inspiração: reportagem UNICEF + documentário médico
+   Anti-pattern: templates SaaS, paletas genéricas, emoji spam
    ============================================================ */
 
-/* ── Fontes Premium ─────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Lora:wght@400;500;600;700&display=swap');
-
-/* Font Awesome (ícones locais, sem requisições externas) */
-@font-face {
-  font-family: 'Font Awesome 6 Brands';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('/fonts/fa-brands-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('/fonts/fa-regular-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 900;
-  font-display: block;
-  src: url('/fonts/fa-solid-900.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'FontAwesome';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('/fonts/fa-v4compatibility.woff2') format('woff2');
-}
+/* ── Tipografia ────────────────────────────────────────────── */
+/* DM Serif Display: autoridade editorial, não decorativa
+   DM Sans: corpo limpo, humanista, excelente legibilidade      */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════════════════
-   TOKENS DE DESIGN — Modo Claro
-   Paleta: Azul confiança (primária) + Âmbar urgência (acento)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   TOKENS — Modo Claro
+   Paleta deliberada: neutros quentes + azul petróleo (confiança
+   institucional, não SaaS) + coral suave (urgência sem agressão)
+   ══════════════════════════════════════════════════════════════ */
 @layer base {
   :root {
-    /* Neutros */
-    --background:    210 30% 98%;
-    --foreground:    215 28% 14%;
+    /* ── Neutros quentes (anti-frieza digital) ─────────── */
+    --background:    40 25% 97%;
+    --foreground:    220 20% 16%;
 
-    --card:          0 0% 100%;
-    --card-foreground: 215 28% 14%;
+    --card:          40 20% 99%;
+    --card-foreground: 220 20% 16%;
 
-    --popover:       0 0% 100%;
-    --popover-foreground: 215 28% 14%;
+    --popover:       40 20% 99%;
+    --popover-foreground: 220 20% 16%;
 
-    /* ── Primária: Azul confiança ─────────────────────── */
-    --primary:       214 89% 45%;
+    /* ── Primária: Azul petróleo institucional ──────────── */
+    --primary:       200 65% 36%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow:  214 89% 55%;
-    --primary-dark:  214 89% 33%;
+    --primary-glow:  200 55% 48%;
+    --primary-dark:  200 70% 26%;
 
-    /* ── Acento: Âmbar urgência (CTA secundário) ─────── */
-    --accent:        38 100% 50%;
-    --accent-foreground: 215 28% 10%;
+    /* ── Acento: Coral suave (urgência humana, não alarme) */
+    --accent:        12 76% 58%;
+    --accent-foreground: 0 0% 100%;
 
-    /* ── Alerta: Vermelho emergência ─────────────────── */
-    --destructive:   0 84% 57%;
+    /* ── Alerta ──────────────────────────────────────────── */
+    --destructive:   0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* ── Suporte ─────────────────────────────────────── */
-    --secondary:     210 20% 93%;
-    --secondary-foreground: 215 28% 30%;
+    /* ── Suporte ─────────────────────────────────────────── */
+    --secondary:     40 15% 92%;
+    --secondary-foreground: 220 15% 35%;
 
-    --muted:         210 20% 95%;
-    --muted-foreground: 215 16% 46%;
+    --muted:         40 12% 93%;
+    --muted-foreground: 220 10% 46%;
 
-    --border:        214 20% 88%;
-    --input:         214 20% 88%;
-    --ring:          214 89% 45%;
+    --border:        40 12% 87%;
+    --input:         40 12% 87%;
+    --ring:          200 65% 36%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
-    /* ── Brand tokens extras ────────────────────────── */
-    --soft-bg:              210 30% 97%;
-    --trust-badge-bg:       120 40% 95%;
-    --trust-badge-text:     120 50% 28%;
+    /* ── Brand extras ────────────────────────────────────── */
+    --soft-bg:       40 20% 96%;
+    --trust-badge-bg:   200 30% 94%;
+    --trust-badge-text: 200 50% 30%;
 
-    /* ── Gradientes ─────────────────────────────────── */
-    --gradient-hero:        linear-gradient(135deg, hsl(214 89% 42%) 0%, hsl(214 80% 58%) 100%);
-    --gradient-cta:         linear-gradient(135deg, hsl(38 100% 50%) 0%, hsl(38 100% 42%) 100%);
-    --gradient-progress:    linear-gradient(90deg, hsl(214 89% 38%) 0%, hsl(214 89% 55%) 100%);
+    /* ── Gradientes — sutis, não chamativos ───────────────── */
+    --gradient-hero:     linear-gradient(145deg, hsl(200 65% 32%) 0%, hsl(200 50% 44%) 100%);
+    --gradient-cta:      linear-gradient(135deg, hsl(12 76% 52%) 0%, hsl(12 80% 45%) 100%);
+    --gradient-progress: linear-gradient(90deg, hsl(200 65% 32%) 0%, hsl(200 55% 48%) 100%);
 
-    /* ── Sombras ─────────────────────────────────────── */
-    --shadow-card:          0 1px 4px hsl(215 28% 14% / 0.08), 0 1px 2px hsl(215 28% 14% / 0.06);
-    --shadow-elevated:      0 8px 30px -8px hsl(214 89% 45% / 0.30);
-    --shadow-cta:           0 6px 24px -4px hsl(38 100% 50% / 0.45);
-    --shadow-trust:         0 2px 12px hsl(214 89% 45% / 0.12);
+    /* ── Sombras — sutis, orgânicas ──────────────────────── */
+    --shadow-card:     0 1px 3px hsl(220 20% 16% / 0.05), 0 1px 2px hsl(220 20% 16% / 0.04);
+    --shadow-elevated: 0 10px 40px -12px hsl(200 65% 36% / 0.18);
+    --shadow-cta:      0 4px 16px -2px hsl(12 76% 52% / 0.30);
+    --shadow-trust:    0 1px 8px hsl(200 65% 36% / 0.08);
   }
 
-  /* ─ Modo escuro (herda tokens, inverte neutros) ─────── */
+  /* ── Modo escuro ───────────────────────────────────────── */
   .dark {
-    --background:    215 35% 8%;
-    --foreground:    210 20% 96%;
-    --card:          215 32% 11%;
-    --card-foreground: 210 20% 96%;
-    --popover:       215 32% 11%;
-    --popover-foreground: 210 20% 96%;
-    --primary:       214 89% 55%;
+    --background:    220 20% 8%;
+    --foreground:    40 10% 94%;
+    --card:          220 18% 11%;
+    --card-foreground: 40 10% 94%;
+    --popover:       220 18% 11%;
+    --popover-foreground: 40 10% 94%;
+    --primary:       200 55% 48%;
     --primary-foreground: 0 0% 100%;
-    --muted:         215 28% 16%;
-    --muted-foreground: 215 16% 60%;
-    --border:        215 28% 20%;
-    --input:         215 28% 20%;
+    --muted:         220 15% 16%;
+    --muted-foreground: 220 10% 58%;
+    --border:        220 15% 20%;
+    --input:         220 15% 20%;
   }
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    RESET E BASE
-   ══════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
 @layer base {
   * {
     @apply border-border;
@@ -134,17 +108,19 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.6;
+    line-height: 1.65;
+    letter-spacing: -0.01em;
   }
 
-  /* Headings usam Lora para emocionar + autoridade */
+  /* Títulos: DM Serif Display — editorial, sóbrio, memorável */
   h1, h2, h3 {
-    font-family: 'Lora', Georgia, serif;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+    font-family: 'DM Serif Display', Georgia, serif;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 400; /* Serif Display é bonito em peso normal */
   }
 
   img, video {
@@ -153,125 +129,117 @@
   }
 
   ::selection {
-    background-color: hsl(var(--primary) / 0.18);
+    background-color: hsl(var(--primary) / 0.15);
+    color: hsl(var(--foreground));
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   COMPONENTES REUTILIZÁVEIS
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   COMPONENTES
+   ══════════════════════════════════════════════════════════════ */
 @layer components {
 
-  /* ── Botão Principal (CTA de Doação) ─────────────────── */
+  /* ── Botão CTA principal ────────────────────────────────── */
   .btn-primary {
-    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl
-           px-7 py-4 text-base font-bold tracking-wide text-white
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+           px-7 py-4 text-base font-semibold text-white
            transition-all duration-200
-           hover:-translate-y-0.5 hover:shadow-[var(--shadow-cta)]
-           active:translate-y-0 active:scale-[0.98]
+           hover:shadow-[var(--shadow-cta)]
+           active:scale-[0.98]
            disabled:cursor-not-allowed disabled:opacity-50;
     background: var(--gradient-cta);
-    box-shadow: var(--shadow-cta);
+    border-radius: 0.625rem;
+    /* Sem shimmer — o efeito é infantil e grita "AI" */
   }
 
-  /* Shimmer animado no botão para chamar atenção */
-  .btn-primary::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.22) 50%, transparent 60%);
-    background-size: 200% 100%;
-    animation: shimmer 2.8s infinite;
+  /* Hover: apenas sutil elevação */
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
   }
 
-  /* ── Botão Secundário (Azul confiança) ───────────────── */
+  /* ── Botão secundário ───────────────────────────────────── */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl
-           bg-primary px-7 py-4 text-base font-bold text-white
+    @apply inline-flex items-center justify-center gap-2
+           bg-primary px-7 py-4 text-base font-semibold text-white
            transition-all duration-200
-           hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevated)]
-           active:translate-y-0 active:scale-[0.98];
+           hover:shadow-[var(--shadow-elevated)]
+           active:scale-[0.98];
+    border-radius: 0.625rem;
   }
 
-  /* ── Alias legado (compatibilidade com código existente) */
+  /* ── Alias legado ───────────────────────────────────────── */
   .btn-vakinha {
     @apply btn-primary;
   }
 
-  /* ── Card padrão ─────────────────────────────────────── */
+  /* ── Card padrão ────────────────────────────────────────── */
   .vk-card {
-    @apply rounded-2xl bg-card p-5 shadow-[var(--shadow-card)];
+    @apply bg-card p-5;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
   }
 
-  /* ── Badge de confiança ──────────────────────────────── */
+  /* ── Badge de confiança ──────────────────────────────────── */
   .trust-badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1
+    @apply inline-flex items-center gap-1.5 px-3 py-1
            text-xs font-semibold;
+    border-radius: 999px;
     background-color: hsl(var(--trust-badge-bg));
     color: hsl(var(--trust-badge-text));
   }
 
-  /* ── Barra de progresso animada ─────────────────────── */
+  /* ── Barra de progresso ──────────────────────────────────── */
   .progress-bar {
-    @apply h-3 overflow-hidden rounded-full;
+    @apply h-2.5 overflow-hidden;
+    border-radius: 999px;
     background-color: hsl(var(--muted));
   }
 
   .progress-fill {
-    @apply h-full rounded-full transition-all duration-1000 ease-out;
+    @apply h-full transition-all duration-1000 ease-out;
+    border-radius: 999px;
     background: var(--gradient-progress);
     position: relative;
   }
 
-  /* Brilho deslizante na barra */
+  /* Brilho sutil na barra — NÃO o shimmer intenso */
   .progress-fill::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-    animation: progress-glow 2s infinite;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent);
+    animation: progress-glow 3s ease-in-out infinite;
   }
 
-  /* ── Seção de fundo suave ────────────────────────────── */
+  /* ── Seção de fundo suave ────────────────────────────────── */
   .section-soft {
     background-color: hsl(var(--soft-bg));
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   ANIMAÇÕES GLOBAIS
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   ANIMAÇÕES — Intencionais, Escassas, Nunca Decorativas
+   ══════════════════════════════════════════════════════════════ */
 @layer utilities {
-  @keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-
   @keyframes progress-glow {
     0%   { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
 
   @keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes pulse-soft {
     0%, 100% { opacity: 1; }
-    50%       { opacity: 0.65; }
+    50%       { opacity: 0.6; }
   }
 
-  @keyframes bounce-gentle {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-4px); }
-  }
+  .animate-fade-in-up   { animation: fade-in-up 0.6s ease-out both; }
+  .animate-pulse-soft   { animation: pulse-soft 2.5s ease-in-out infinite; }
 
-  .animate-fade-in-up   { animation: fade-in-up 0.5s ease-out both; }
-  .animate-pulse-soft   { animation: pulse-soft 2s ease-in-out infinite; }
-  .animate-bounce-gentle { animation: bounce-gentle 1.8s ease-in-out infinite; }
-
-  /* Delays para entrada escalonada */
+  /* Delays */
   .delay-100 { animation-delay: 100ms; }
   .delay-200 { animation-delay: 200ms; }
   .delay-300 { animation-delay: 300ms; }

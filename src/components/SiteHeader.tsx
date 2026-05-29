@@ -1,43 +1,34 @@
-import { ShieldCheck, Lock, Heart } from "lucide-react";
+import { ShieldCheck, Heart } from "lucide-react";
 
 export const SiteHeader = () => {
   return (
     <header className="sticky top-0 z-40 w-full">
-      {/* ── Barra de confiança (topo) ─────────────────────────── */}
-      <div className="bg-primary py-1.5 text-center text-xs font-semibold text-white">
-        <span className="flex items-center justify-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          Campanha verificada · Doação 100% segura via PIX oficial
-          <Lock className="h-3.5 w-3.5" />
+      {/* Barra de credibilidade — discreta, uma linha */}
+      <div className="bg-primary/95 py-1 text-center text-[11px] font-medium tracking-wide text-white/90">
+        <span className="flex items-center justify-center gap-1.5">
+          <ShieldCheck className="h-3 w-3 opacity-70" />
+          Campanha verificada · Doação segura via PIX
         </span>
       </div>
 
-      {/* ── Barra principal ───────────────────────────────────── */}
-      <div className="border-b border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[var(--shadow-trust)]">
-        <div className="container flex h-14 items-center justify-between gap-4">
-          {/* Logo / identidade da campanha */}
-          <a href="/" className="flex items-center gap-2" aria-label="Campanha Duda AME">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-              <Heart className="h-4 w-4 fill-white text-white" />
-            </span>
-            <span className="font-display text-base font-bold text-foreground leading-tight hidden sm:block">
-              Ajude a <span className="text-primary">Duda</span>
+      {/* Header principal */}
+      <div className="border-b border-border/60 bg-white/98 backdrop-blur-sm">
+        <div className="container flex h-12 items-center justify-between">
+          {/* Identidade */}
+          <a href="/" className="flex items-center gap-2" aria-label="Campanha Duda">
+            <Heart className="h-5 w-5 text-primary" />
+            <span className="font-display text-lg text-foreground">
+              Ajude a Duda
             </span>
           </a>
 
-          {/* Prova social rápida — desktop */}
-          <div className="hidden items-center gap-2 text-sm text-muted-foreground md:flex">
-            <span className="font-bold text-foreground">2.843</span> pessoas já doaram
-            <Heart className="h-4 w-4 fill-primary text-primary animate-pulse-soft" />
-          </div>
-
-          {/* CTA sempre visível */}
+          {/* CTA — sem emoji, direto */}
           <a
             href="#doe-agora"
-            className="btn-primary px-4 py-2 text-sm"
+            className="rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-accent/90"
             id="header-cta"
           >
-            Quero Ajudar 💛
+            Doar agora
           </a>
         </div>
       </div>

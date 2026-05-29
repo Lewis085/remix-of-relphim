@@ -177,27 +177,19 @@ export const DonationNotification = () => {
       aria-live="polite"
       aria-atomic="true"
       className={`
-        fixed bottom-24 left-3 z-50 w-[300px] max-w-[calc(100vw-1.5rem)]
-        overflow-hidden rounded-2xl border border-border bg-white
-        shadow-[0_8px_32px_rgba(0,0,0,0.14)]
+        fixed bottom-24 left-3 z-50 w-[280px] max-w-[calc(100vw-1.5rem)]
+        overflow-hidden rounded-lg border border-border/60 bg-white
+        shadow-[0_4px_20px_rgba(0,0,0,0.08)]
         transition-all duration-300 ease-out
         lg:bottom-6
-        ${visible ? "translate-y-0 opacity-100 scale-100" : "translate-y-6 opacity-0 scale-95"}
+        ${visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}
       `}
     >
-      {/* Borda colorida no topo — indicador visual do tipo */}
-      <div
-        className={`h-1 w-full ${
-          notif.type === "milestone" ? "bg-accent" :
-          notif.type === "share"     ? "bg-primary/60" :
-          "bg-primary"
-        }`}
-      />
 
       <div className="flex items-start gap-3 p-3">
         {/* Avatar com fallback emoji */}
-        <div className="relative flex-shrink-0">
-          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-muted text-xl ring-2 ring-primary/20">
+        <div className="flex-shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-lg">
             <img
               src={notif.avatar}
               alt={notif.name}
@@ -205,44 +197,37 @@ export const DonationNotification = () => {
               onError={(e) => {
                 const el = e.currentTarget;
                 el.style.display = "none";
-                el.parentElement!.textContent = notif.emoji ?? "👤";
+                el.parentElement!.textContent = notif.emoji ?? "";
               }}
             />
           </div>
-          {/* Indicador de atividade ao vivo */}
-          {notif.type === "donation" && (
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary ring-2 ring-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-            </span>
-          )}
         </div>
 
         {/* Conteúdo */}
         <div className="min-w-0 flex-1 text-sm leading-snug">
           {notif.type === "donation" && (
             <>
-              <p className="font-bold text-foreground">{notif.name}</p>
+              <p className="font-semibold text-foreground">{notif.name}</p>
               <p className="text-muted-foreground">
-                acaba de ajudar a Duda com{" "}
+                ajudou a Duda com{" "}
                 <strong className="text-primary">
                   R$&nbsp;{formatBRL(notif.amount!)}
-                </strong>{" "}
-                💙
+                </strong>
               </p>
             </>
           )}
 
           {notif.type === "share" && (
             <>
-              <p className="font-bold text-foreground">{notif.name}</p>
+              <p className="font-semibold text-foreground">{notif.name}</p>
               <p className="text-muted-foreground">
-                {notif.message} 📢
+                {notif.message}
               </p>
             </>
           )}
 
           {notif.type === "milestone" && (
-            <p className="font-bold text-foreground leading-tight">
+            <p className="font-semibold text-foreground leading-tight">
               {notif.message}
             </p>
           )}
