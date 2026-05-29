@@ -50,11 +50,12 @@ async function getToken(client: any): Promise<string> {
   return cachedToken.value;
 }
 
-function makeTxid(): string {
-  // 26-35 chars alfanuméricos
+function makeProductTxid(): string {
+  // 26-35 chars alfanuméricos. Prefixo "30D7K" identifica o produto "30Dias 7kgs".
   const rand = crypto.randomUUID().replace(/-/g, "");
-  return ("MM" + rand).slice(0, 32);
+  return ("30D7K" + rand).slice(0, 32);
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
