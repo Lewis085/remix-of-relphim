@@ -50,11 +50,12 @@ async function getToken(client: any): Promise<string> {
   return cachedToken.value;
 }
 
-function makeTxid(): string {
-  // 26-35 chars alfanuméricos
+function makeProductTxid(): string {
+  // 26-35 chars alfanuméricos. Prefixo "30D7K" identifica o produto "30Dias 7kgs".
   const rand = crypto.randomUUID().replace(/-/g, "");
-  return ("MM" + rand).slice(0, 32);
+  return ("30D7K" + rand).slice(0, 32);
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -70,7 +71,7 @@ Deno.serve(async (req) => {
 
     const client = await getHttpClient();
     const token = await getToken(client);
-    const txid = makeTxid();
+    const txid = makeProductTxid();
     const valor = (amountCents / 100).toFixed(2);
 
     const cobPayload = {
@@ -78,6 +79,10 @@ Deno.serve(async (req) => {
       valor: { original: valor },
       chave: PIX_KEY,
       solicitacaoPagador: "30Dias 7kgs",
+      infoAdicionais: [
+        { nome: "Produto", valor: "30Dias 7kgs" },
+        { nome: "Referencia", valor: txid },
+      ],
     };
 
     const cobResp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
