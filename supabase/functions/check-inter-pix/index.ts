@@ -49,13 +49,16 @@ async function getToken(client: any): Promise<string> {
   });
   const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
     body,
     // @ts-ignore
     client,
   });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(`OAuth falhou: ${resp.status} ${JSON.stringify(data)}`);
+  const text = await resp.text();
+  let data: any = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+  if (!resp.ok) throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+  if (!data?.access_token) throw new Error(`OAuth sem access_token: ${text || "(empty body)"}`);
   cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
   return cachedToken.value;
 }
@@ -76,13 +79,15 @@ Deno.serve(async (req) => {
     const token = await getToken(client);
 
     const resp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       // @ts-ignore
       client,
     });
-    const data = await resp.json();
+    const text = await resp.text();
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
     if (!resp.ok) {
-      return new Response(JSON.stringify({ error: "Inter API error", details: data }), {
+      return new Response(JSON.stringify({ error: "Inter API error", status: resp.status, details: data || text }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
