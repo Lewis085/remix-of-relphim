@@ -41,26 +41,40 @@ async function getToken(client: any): Promise<string> {
   const clientSecret = Deno.env.get("INTER_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("INTER_CLIENT_ID/SECRET não configurados");
 
-  const body = new URLSearchParams({
+  const bodyParams = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     grant_type: "client_credentials",
     scope: "cob.write cob.read pix.read",
   });
-  const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-    body,
-    // @ts-ignore
-    client,
-  });
-  const text = await resp.text();
-  let data: any = {};
-  try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
-  if (!resp.ok) throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
-  if (!data?.access_token) throw new Error(`OAuth sem access_token: ${text || "(empty body)"}`);
-  cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
-  return cachedToken.value;
+
+  // Tenta obter token com 1 retry após 1.5s em caso de rate limit
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: bodyParams,
+      // @ts-ignore
+      client,
+    });
+
+    if (resp.status === 429 && attempt === 0) {
+      console.warn("Inter OAuth rate limited (check), aguardando 1.5s para retry...");
+      await resp.text(); // consume body
+      await new Promise((r) => setTimeout(r, 1500));
+      continue;
+    }
+
+    const text = await resp.text();
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+    if (!resp.ok) throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+    if (!data?.access_token) throw new Error(`OAuth sem access_token: ${text || "(empty body)"}`);
+    cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
+    return cachedToken.value;
+  }
+
+  throw new Error("OAuth falhou após retry (rate limit persistente)");
 }
 
 Deno.serve(async (req) => {

@@ -50,27 +50,39 @@ async function getToken(client: any): Promise<string> {
   const clientSecret = Deno.env.get("INTER_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("INTER_CLIENT_ID/SECRET não configurados");
 
-  const body = new URLSearchParams({
+  const bodyParams = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     grant_type: "client_credentials",
     scope: "cob.write cob.read pix.read",
   });
 
-  const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-    // @ts-ignore
-    client,
-  });
-  const data = await resp.json();
-  if (!resp.ok) {
-    console.error("Inter OAuth error", resp.status, data);
-    throw new Error(`OAuth falhou: ${resp.status} ${JSON.stringify(data)}`);
+  // Tenta obter token com 1 retry após 1.5s em caso de rate limit
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: bodyParams,
+      // @ts-ignore
+      client,
+    });
+
+    if (resp.status === 429 && attempt === 0) {
+      console.warn("Inter OAuth rate limited, aguardando 1.5s para retry...");
+      await new Promise((r) => setTimeout(r, 1500));
+      continue;
+    }
+
+    const data = await resp.json();
+    if (!resp.ok) {
+      console.error("Inter OAuth error", resp.status, data);
+      throw new Error(`OAuth falhou: ${resp.status} ${JSON.stringify(data)}`);
+    }
+    cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
+    return cachedToken.value;
   }
-  cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
-  return cachedToken.value;
+
+  throw new Error("OAuth falhou após retry (rate limit persistente)");
 }
 
 function makeProductTxid(): string {
@@ -126,33 +138,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Gera imagem do QR a partir do location
-    let qr_code_base64: string | undefined;
-    const locId = cob?.loc?.id;
-    if (locId) {
-      const qrResp = await fetch(`${INTER_BASE}/pix/v2/loc/${locId}/qrcode`, {
-        headers: { Authorization: `Bearer ${token}` },
-        // @ts-ignore
-        client,
-      });
-      if (qrResp.ok) {
-        const qrData = await qrResp.json();
-        if (qrData?.imagemQrcode) {
-          qr_code_base64 = qrData.imagemQrcode.startsWith("data:")
-            ? qrData.imagemQrcode
-            : `data:image/png;base64,${qrData.imagemQrcode}`;
-        }
-      } else {
-        await qrResp.text();
-      }
-    }
+    // O QR Code é renderizado no frontend via qrcode.react a partir do pixCopiaECola.
+    // Removida a requisição extra GET /loc/{id}/qrcode que causava timeouts desnecessários.
 
     return new Response(
       JSON.stringify({
         transaction_id: txid,
         reference: txid,
         qr_code: cob.pixCopiaECola,
-        qr_code_base64,
+        qr_code_base64: undefined,
         amount: amountCents,
         expires_at: cob?.calendario?.expiracao,
       }),
@@ -166,3 +160,4 @@ Deno.serve(async (req) => {
     });
   }
 });
+
