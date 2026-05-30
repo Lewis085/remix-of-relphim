@@ -117,7 +117,7 @@ export const PixBottomSheet = ({ open, amount, onClose }: PixBottomSheetProps) =
       } catch (e) {
         console.warn("poll error", e);
       }
-    }, 3000);
+    }, 8000);
     return () => clearInterval(id);
   }, [open, pix, paid]);
 
