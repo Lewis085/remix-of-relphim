@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { addDonation } from "@/lib/donationStore";
-import notifAvatar from "@/assets/notif-avatar.png";
+import notifAvatar from "@/assets/notif-avatar.webp";
 
 // ── Tipos de notificação ───────────────────────────────────────
 type NotifType = "donation" | "milestone" | "share";

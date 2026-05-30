@@ -6,9 +6,8 @@
    ============================================================ */
 
 /* ── Tipografia ────────────────────────────────────────────── */
-/* DM Serif Display: autoridade editorial, não decorativa
-   DM Sans: corpo limpo, humanista, excelente legibilidade      */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
+/* DM Serif Display + DM Sans carregados de forma non-blocking
+   via <link> no index.html (media=print → onload=all)          */
 
 @tailwind base;
 @tailwind components;

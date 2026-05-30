@@ -1,6 +1,6 @@
 import { Heart, CheckCircle2, MessageCircle, ShieldCheck, Users, Clock, Share2 } from "lucide-react";
 import bannerCeleste from "@/assets/banner-celeste.jpg";
-import institutoLogo from "@/assets/instituto-logo.png";
+import institutoLogo from "@/assets/instituto-logo.webp";
 import seloSeguranca from "@/assets/selo-seguranca.png";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
