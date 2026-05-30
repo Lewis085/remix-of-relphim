@@ -76,7 +76,20 @@ Deno.serve(async (req) => {
     }
 
     const client = await getHttpClient();
-    const token = await getToken(client);
+    let token: string;
+    try {
+      token = await getToken(client);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Em caso de rate-limit no OAuth, devolve pending para o polling continuar sem 500
+      if (msg.includes("429")) {
+        return new Response(
+          JSON.stringify({ status: "pending", id: txid, raw_status: "RATE_LIMITED" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      throw e;
+    }
 
     const resp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
