@@ -75,7 +75,6 @@ async function getToken(client: any): Promise<string> {
     await new Promise((r) => setTimeout(r, wait));
   }
   if (!resp) throw new Error("OAuth: sem resposta");
-  const text = await resp.text();
   if (!resp.ok) {
     console.error("Inter OAuth error", resp.status, text);
     throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
