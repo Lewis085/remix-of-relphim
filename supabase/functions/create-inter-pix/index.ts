@@ -101,9 +101,7 @@ Deno.serve(async (req) => {
       calendario: { expiracao: 900 },
       valor: { original: valor },
       chave: PIX_KEY,
-      solicitacaoPagador: "30Dias 7kgs",
       infoAdicionais: [
-        { nome: "Produto", valor: "30Dias 7kgs" },
         { nome: "Referencia", valor: txid },
       ],
     };
