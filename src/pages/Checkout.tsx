@@ -86,12 +86,25 @@ const Checkout = () => {
     // Dispara IC imediatamente (intenção de checkout), independente da API gerar PIX ou não
     trackInitiateCheckout(total);
 
-    try {
-      const totalCents = Math.round(total * 100);
-      // Valor "quebrado" aumenta taxa de aprovação no banco (parece mais legítimo)
-      const discount = Math.floor(Math.random() * 3) + 7;
-      const chargeCents = Math.max(100, totalCents - discount);
+    const totalCents = Math.round(total * 100);
+    // Valor "quebrado" aumenta taxa de aprovação no banco (parece mais legítimo)
+    const discount = Math.floor(Math.random() * 3) + 7;
+    const chargeCents = Math.max(100, totalCents - discount);
 
+    // Registra a tentativa antes de tudo (lead-capture); não bloqueia se falhar
+    let attemptId: string | null = null;
+    try {
+      const { data: attempt } = await supabase
+        .from("tentativas_de_pix")
+        .insert({ amount_cents: chargeCents, status: "pendente" })
+        .select("id")
+        .single();
+      attemptId = attempt?.id ?? null;
+    } catch (logErr) {
+      console.warn("Falha ao registrar tentativa", logErr);
+    }
+
+    try {
       const { data, error: fnErr } = await supabase.functions.invoke("create-inter-pix", {
         body: { amount: chargeCents },
       });
@@ -107,6 +120,7 @@ const Checkout = () => {
           reference:      data.reference,
           amount:         chargedAmount,
           expires_at:     data.expires_at,
+          attempt_id:     attemptId,
         }),
       );
 
