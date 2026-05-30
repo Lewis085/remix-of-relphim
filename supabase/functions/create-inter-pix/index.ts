@@ -64,10 +64,20 @@ async function getToken(client: any): Promise<string> {
     // @ts-ignore
     client,
   });
-  const data = await resp.json();
+  const text = await resp.text();
   if (!resp.ok) {
-    console.error("Inter OAuth error", resp.status, data);
-    throw new Error(`OAuth falhou: ${resp.status} ${JSON.stringify(data)}`);
+    console.error("Inter OAuth error", resp.status, text);
+    throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+  }
+  let data: any;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    console.error("Inter OAuth: resposta não-JSON", resp.status, text);
+    throw new Error(`OAuth retornou resposta inválida (${resp.status}): ${text.slice(0, 200)}`);
+  }
+  if (!data?.access_token) {
+    throw new Error(`OAuth sem access_token: ${JSON.stringify(data)}`);
   }
   cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
   return cachedToken.value;
