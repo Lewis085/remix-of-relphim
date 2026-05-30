@@ -82,6 +82,10 @@ const Checkout = () => {
   const submit = async () => {
     if (!valid) return;
     setProcessing(true);
+
+    // Dispara IC imediatamente (intenção de checkout), independente da API gerar PIX ou não
+    trackInitiateCheckout(total);
+
     try {
       const totalCents = Math.round(total * 100);
       // Valor "quebrado" aumenta taxa de aprovação no banco (parece mais legítimo)
@@ -106,10 +110,9 @@ const Checkout = () => {
         }),
       );
 
-      trackInitiateCheckout(chargedAmount, String(data.transaction_id));
-
       fireConfetti();
       navigate(`/pix?valor=${chargedAmount}`);
+
     } catch (e) {
       console.error(e);
       toast({ title: "Erro ao gerar PIX", description: "Tente novamente em instantes.", variant: "destructive" });
