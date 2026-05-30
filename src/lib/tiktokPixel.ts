@@ -42,14 +42,13 @@ export const trackInitiateCheckout = (valor: number, txId?: string) => {
 };
 
 /**
- * Dispara o evento de compra finalizada (Purchase / CompletePayment) no TikTok.
- * Use ao confirmar pagamento PIX (quando a API PIX estiver integrada,
- * chamar isto na callback de "pago/aprovado").
+ * Dispara o evento de compra finalizada (Purchase) no TikTok.
+ * Chamado quando o polling detecta que o PIX foi pago/aprovado.
  */
 export const trackPurchase = (valor: number, txId?: string) => {
   if (typeof window === "undefined" || !window.ttq) return;
   try {
-    window.ttq.track("CompletePayment", {
+    window.ttq.track("Purchase", {
       value: valor,
       currency: "BRL",
       content_type: "product",
