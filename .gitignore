@@ -12,8 +12,8 @@ dist
 dist-ssr
 
 # ── Arquivos de ambiente (NUNCA versionar chaves!) ───────────
-.env
-.env.*
+.env.local
+.env.*.local
 !.env.example
 
 # ── OS / Editor ──────────────────────────────────────────────
@@ -31,3 +31,4 @@ Thumbs.db
 # ── Outros ───────────────────────────────────────────────────
 *.local
 coverage
+
