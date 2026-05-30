@@ -80,6 +80,8 @@ const fireConfetti = async (big = false) => {
 export const DonationNotification = () => {
   const [notif, setNotif] = useState<Notif | null>(null);
   const [visible, setVisible] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
 
   // ref para não fechar antes de exibir
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,6 +101,7 @@ export const DonationNotification = () => {
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 
       setNotif(n);
+      setAvatarFailed(false);
 
       // Adiciona doação ao store (só uma vez por id)
       if (n.type === "donation" && n.amount && !countedIds.has(n.id)) {
@@ -192,16 +195,16 @@ export const DonationNotification = () => {
         {/* Avatar com fallback emoji */}
         <div className="flex-shrink-0">
           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-lg">
-            <img
-              src={notif.avatar}
-              alt={notif.name}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const el = e.currentTarget;
-                el.style.display = "none";
-                el.parentElement!.textContent = notif.emoji ?? "";
-              }}
-            />
+            {avatarFailed ? (
+              <span>{notif.emoji ?? ""}</span>
+            ) : (
+              <img
+                src={notif.avatar}
+                alt={notif.name}
+                className="h-full w-full object-cover"
+                onError={() => setAvatarFailed(true)}
+              />
+            )}
           </div>
         </div>
 
