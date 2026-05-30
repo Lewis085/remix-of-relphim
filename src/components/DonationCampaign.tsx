@@ -147,14 +147,14 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
             <div className="mt-4 flex items-center gap-3 rounded-lg border border-border/60 p-3 lg:hidden">
               <img
                 src={institutoLogo}
-                alt="Instituto Mundo Melhor"
+                alt="Instituto Impacto Positivo"
                 loading="lazy"
                 width={40}
                 height={40}
                 className="h-10 w-10 flex-shrink-0 rounded-full bg-muted object-contain"
               />
               <div className="text-xs text-muted-foreground">
-                <p className="text-sm font-semibold text-foreground">Instituto Mundo Melhor</p>
+                <p className="text-sm font-semibold text-foreground">Instituto Impacto Positivo</p>
                 <p>Verificado · Ativo desde maio/2025</p>
               </div>
             </div>
@@ -330,14 +330,14 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
               <div className="mt-3 flex items-center gap-3 rounded-lg border border-border/60 bg-card p-4">
                 <img
                   src={institutoLogo}
-                  alt="Instituto Mundo Melhor"
+                  alt="Instituto Impacto Positivo"
                   loading="lazy"
                   width={44}
                   height={44}
                   className="h-11 w-11 flex-shrink-0 rounded-full bg-muted object-contain"
                 />
                 <div className="text-xs text-muted-foreground">
-                  <p className="text-sm font-semibold text-foreground">Instituto Mundo Melhor</p>
+                  <p className="text-sm font-semibold text-foreground">Instituto Impacto Positivo</p>
                   <p>Verificado · Ativo desde maio/2025</p>
                   <p>3 campanhas · 8 apoiadas</p>
                 </div>
