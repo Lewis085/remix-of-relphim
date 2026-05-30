@@ -11,13 +11,19 @@ declare global {
   }
 }
 
+// Nome interno do produto usado para rastrear vendas no TikTok Ads.
+// Mantém consistência com o que a API Inter recebe (solicitacaoPagador / infoAdicionais).
+const PRODUCT_NAME = "30Dias 7kgs";
+const PRODUCT_ID = "30D7K";
+
 /** Dispara o evento de visualização de conteúdo (Landing Page) */
 export const trackViewContent = () => {
   if (typeof window === "undefined" || !window.ttq) return;
   try {
     window.ttq.track("ViewContent", {
       content_type: "product",
-      content_name: "Doação Duda - Landing Page",
+      content_id: PRODUCT_ID,
+      content_name: PRODUCT_NAME,
     });
   } catch (e) {
     console.warn("TikTok pixel track failed", e);
@@ -32,8 +38,8 @@ export const trackInitiateCheckout = (valor: number, txId?: string) => {
       value: valor,
       currency: "BRL",
       content_type: "product",
-      content_id: txId || "doacao-pix-gerado",
-      content_name: "Doação Duda - PIX Gerado",
+      content_id: txId || PRODUCT_ID,
+      content_name: PRODUCT_NAME,
       quantity: 1,
     });
   } catch (e) {
@@ -52,8 +58,8 @@ export const trackPurchase = (valor: number, txId?: string) => {
       value: valor,
       currency: "BRL",
       content_type: "product",
-      content_id: txId || "doacao-pix",
-      content_name: "Doação Duda",
+      content_id: txId || PRODUCT_ID,
+      content_name: PRODUCT_NAME,
       quantity: 1,
     });
   } catch (e) {
