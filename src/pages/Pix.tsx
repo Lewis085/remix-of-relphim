@@ -77,13 +77,17 @@ const Pix = () => {
         const j = await r.json();
         if (j?.status === "approved" || j?.status === "paid") {
           setPaid(true);
+          sessionStorage.removeItem("inter_pix");
+          sessionStorage.removeItem("paradise_pix");
           if (!trackedRef.current) {
             trackedRef.current = true;
-            trackPurchase(pix.amount, String(pix.reference));
+            // Usa o valor real confirmado pelo Inter quando disponível
+            const realAmount = j?.amount ? parseFloat(j.amount) : pix.amount;
+            trackPurchase(realAmount, String(pix.reference));
           }
         }
       } catch (e) { console.warn("poll error", e); }
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(id);
   }, [pix, paid]);
