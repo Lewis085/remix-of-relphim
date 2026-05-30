@@ -476,7 +476,7 @@ const MobileSummary = ({ arrecadado, pct, apoiadores, onDonateClick }: MobileSum
         R$ {formatBRL(arrecadado)}
       </strong>
       <span className="text-xs text-muted-foreground">
-        de R$ {formatBRL(META)} · {apoiadores.toLocaleString("pt-BR")} apoiadores
+        de R$ {formatBRL(META)}
       </span>
     </div>
     <button onClick={onDonateClick} className="btn-primary mt-3 w-full py-3 text-[15px]" id="mobile-summary-cta">
