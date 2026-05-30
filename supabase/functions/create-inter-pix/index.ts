@@ -57,13 +57,24 @@ async function getToken(client: any): Promise<string> {
     scope: "cob.write cob.read pix.read",
   });
 
-  const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-    // @ts-ignore
-    client,
-  });
+  let resp: Response | null = null;
+  let text = "";
+  for (let attempt = 0; attempt < 4; attempt++) {
+    resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      // @ts-ignore
+      client,
+    });
+    text = await resp.text();
+    if (resp.status !== 429 && resp.status < 500) break;
+    // backoff: 500ms, 1s, 2s, 4s
+    const wait = 500 * Math.pow(2, attempt);
+    console.warn(`Inter OAuth ${resp.status}, retry em ${wait}ms (tentativa ${attempt + 1})`);
+    await new Promise((r) => setTimeout(r, wait));
+  }
+  if (!resp) throw new Error("OAuth: sem resposta");
   const text = await resp.text();
   if (!resp.ok) {
     console.error("Inter OAuth error", resp.status, text);
