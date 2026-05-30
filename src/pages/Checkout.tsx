@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Check, Crown, Lock, ShieldCheck, Heart } from "lucide-react";
 import { VakinhaLogo } from "@/components/VakinhaLogo";
-import seloSeguranca from "@/assets/selo-seguranca.png";
+import seloSeguranca from "@/assets/selo-seguranca.webp";
 import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
