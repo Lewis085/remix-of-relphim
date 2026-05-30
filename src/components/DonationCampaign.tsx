@@ -354,7 +354,10 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
       </div>
 
       {/* Sticky mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/60 bg-white/98 backdrop-blur-sm p-3 lg:hidden">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/60 bg-white/98 backdrop-blur-sm p-3 lg:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <button
           onClick={onDonateClick}
           className="btn-primary w-full py-3.5 text-[15px]"

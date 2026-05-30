@@ -10,7 +10,10 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="flex-1 pb-24 lg:pb-0">
+      <main
+        className="flex-1 lg:pb-0"
+        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <DonationCampaign onDonateClick={() => navigate("/checkout")} />
       </main>
       <SiteFooter />

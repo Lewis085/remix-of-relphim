@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Check, Crown, Lock, ShieldCheck, Heart } from "lucide-react";
-import confetti from "canvas-confetti";
 import { VakinhaLogo } from "@/components/VakinhaLogo";
 import seloSeguranca from "@/assets/selo-seguranca.png";
 import pixLogo from "@/assets/pix-logo.png";
@@ -30,14 +29,17 @@ const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ── Confetti na paleta azul ────────────────────────────────────
-const fireConfetti = () => {
-  const end = Date.now() + 800;
-  const colors = ["#1A7FE8", "#38bdf8", "#fbbf24", "#ffffff"];
-  (function frame() {
-    confetti({ particleCount: 4, angle: 60,  spread: 55, origin: { x: 0 }, colors });
-    confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
+const fireConfetti = async () => {
+  try {
+    const { default: confetti } = await import("canvas-confetti");
+    const end = Date.now() + 800;
+    const colors = ["#1A7FE8", "#38bdf8", "#fbbf24", "#ffffff"];
+    (function frame() {
+      confetti({ particleCount: 4, angle: 60,  spread: 55, origin: { x: 0 }, colors });
+      confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  } catch { /* confetti is non-critical */ }
 };
 
 // ══════════════════════════════════════════════════════════════

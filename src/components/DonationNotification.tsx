@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import confetti from "canvas-confetti";
 import { addDonation } from "@/lib/donationStore";
 import notifAvatar from "@/assets/notif-avatar.webp";
 
@@ -59,17 +58,20 @@ const shownMilestones = new Set<number>();
 let nextId = 1;
 
 // ── Confetti calibrado para a nova paleta azul ────────────────
-const fireConfetti = (big = false) => {
-  const colors = ["#1A7FE8", "#38bdf8", "#fbbf24", "#ffffff", "#60efff"];
-  confetti({
-    particleCount: big ? 120 : 55,
-    spread:        big ? 90  : 65,
-    origin:        { x: 0.12, y: 0.88 },
-    colors,
-    startVelocity: big ? 55  : 35,
-    gravity:       0.85,
-    scalar:        0.9,
-  });
+const fireConfetti = async (big = false) => {
+  try {
+    const { default: confetti } = await import("canvas-confetti");
+    const colors = ["#1A7FE8", "#38bdf8", "#fbbf24", "#ffffff", "#60efff"];
+    confetti({
+      particleCount: big ? 120 : 55,
+      spread:        big ? 90  : 65,
+      origin:        { x: 0.12, y: 0.88 },
+      colors,
+      startVelocity: big ? 55  : 35,
+      gravity:       0.85,
+      scalar:        0.9,
+    });
+  } catch { /* confetti is non-critical */ }
 };
 
 // ══════════════════════════════════════════════════════════════

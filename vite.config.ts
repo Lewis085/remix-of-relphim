@@ -20,17 +20,11 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
   build: {
-    target: "es2020",
+    // es2017 ensures compatibility with iOS 12+ (iPhone 6s and newer)
+    target: "es2017",
     cssCodeSplit: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ["react", "react-dom", "react-router-dom"],
-          supabase: ["@supabase/supabase-js"],
-          qrcode: ["qrcode.react"],
-          confetti: ["canvas-confetti"],
-        },
-      },
-    },
+    // Let Vite handle code splitting automatically instead of forcing
+    // many small chunks that create excessive parallel network requests
+    // on slow 3G/4G connections
   },
 }));
