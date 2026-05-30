@@ -6,6 +6,7 @@ import seloSeguranca from "@/assets/selo-seguranca.png";
 import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { trackInitiateCheckout } from "@/lib/tiktokPixel";
 
 // ── Configuração de preços (psicologia de ancoragem) ──────────
 // - R$50 é o "mais escolhido" → âncora principal
@@ -104,6 +105,8 @@ const Checkout = () => {
           expires_at:     data.expires_at,
         }),
       );
+
+      trackInitiateCheckout(chargedAmount, String(data.transaction_id));
 
       fireConfetti();
       navigate(`/pix?valor=${chargedAmount}`);

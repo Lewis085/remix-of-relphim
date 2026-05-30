@@ -11,6 +11,36 @@ declare global {
   }
 }
 
+/** Dispara o evento de visualização de conteúdo (Landing Page) */
+export const trackViewContent = () => {
+  if (typeof window === "undefined" || !window.ttq) return;
+  try {
+    window.ttq.track("ViewContent", {
+      content_type: "product",
+      content_name: "Doação Duda - Landing Page",
+    });
+  } catch (e) {
+    console.warn("TikTok pixel track failed", e);
+  }
+};
+
+/** Dispara o evento quando o PIX é gerado e o checkout foi iniciado efetivamente */
+export const trackInitiateCheckout = (valor: number, txId?: string) => {
+  if (typeof window === "undefined" || !window.ttq) return;
+  try {
+    window.ttq.track("InitiateCheckout", {
+      value: valor,
+      currency: "BRL",
+      content_type: "product",
+      content_id: txId || "doacao-pix-gerado",
+      content_name: "Doação Duda - PIX Gerado",
+      quantity: 1,
+    });
+  } catch (e) {
+    console.warn("TikTok pixel track failed", e);
+  }
+};
+
 /**
  * Dispara o evento de compra finalizada (Purchase / CompletePayment) no TikTok.
  * Use ao confirmar pagamento PIX (quando a API PIX estiver integrada,
