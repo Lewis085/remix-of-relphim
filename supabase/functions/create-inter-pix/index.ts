@@ -86,9 +86,13 @@ async function getToken(client: any): Promise<string> {
 }
 
 function makeProductTxid(): string {
-  // 26-35 chars alfanuméricos. Prefixo "30D7K" identifica o produto "30Dias 7kgs".
-  const rand = crypto.randomUUID().replace(/-/g, "");
-  return ("30D7K" + rand).slice(0, 32);
+  // txid legível no formato ORD-{pedido_id}. Mantém 26-35 chars alfanuméricos.
+  // pedido_id derivado de timestamp + random para garantir unicidade.
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const pedidoId = `${ts}${rand}`;
+  const raw = `ORD${pedidoId}`.replace(/[^A-Za-z0-9]/g, "");
+  return raw.slice(0, 32).padEnd(26, "0");
 }
 
 
