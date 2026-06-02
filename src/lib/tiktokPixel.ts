@@ -24,6 +24,20 @@ export const trackViewContent = () => {
   }
 };
 
+/** Faz o Advanced Matching do usuário com os dados do formulário para otimizar ROAS */
+export const trackIdentify = (email: string, phone: string) => {
+  if (typeof window === "undefined" || !window.ttq || !window.ttq.identify) return;
+  try {
+    const cleanPhone = phone.replace(/\D/g, "");
+    window.ttq.identify({
+      email: email.trim().toLowerCase(),
+      phone_number: `+55${cleanPhone}`
+    });
+  } catch (e) {
+    console.warn("TikTok pixel identify failed", e);
+  }
+};
+
 /** Dispara o evento quando o PIX é gerado e o checkout foi iniciado efetivamente */
 export const trackInitiateCheckout = (valor: number, txId?: string) => {
   if (typeof window === "undefined" || !window.ttq) return;

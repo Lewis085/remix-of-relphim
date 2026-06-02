@@ -6,7 +6,7 @@ import seloSeguranca from "@/assets/selo-seguranca.webp";
 import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { trackInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackInitiateCheckout, trackIdentify } from "@/lib/tiktokPixel";
 
 // ── Configuração de preços (psicologia de ancoragem) ──────────
 const PRESETS = [25, 35, 50, 75, 100, 150, 200, 250];
@@ -116,8 +116,6 @@ const Checkout = () => {
     if (!valid || !formValid) return;
     setProcessing(true);
 
-    trackInitiateCheckout(total);
-
     try {
       const totalCents = Math.round(total * 100);
       const discount = Math.floor(Math.random() * 3) + 7;
@@ -129,6 +127,12 @@ const Checkout = () => {
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
 
       const chargedAmount = chargeCents / 100;
+      
+      // Envia os dados do formulário para o TikTok Pixel (Advanced Matching) antes do evento
+      trackIdentify(email, telefone);
+      // Dispara InitiateCheckout com o ID real da transação
+      trackInitiateCheckout(chargedAmount, data.transaction_id);
+
       sessionStorage.setItem(
         "inter_pix",
         JSON.stringify({
