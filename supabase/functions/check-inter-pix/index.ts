@@ -235,6 +235,11 @@ Deno.serve(async (req) => {
     const interStatus = data?.status;
     const status = interStatus === "CONCLUIDA" ? "approved" : "pending";
 
+    if (status === "approved") {
+      // dispara notificação em background, sem bloquear a resposta
+      notifyTelegramOnce(txid, data?.valor?.original).catch(() => {});
+    }
+
     return new Response(
       JSON.stringify({ status, id: txid, raw_status: interStatus, amount: data?.valor?.original }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
