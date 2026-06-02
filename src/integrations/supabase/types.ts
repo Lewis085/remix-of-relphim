@@ -35,6 +35,21 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_notified: {
+        Row: {
+          notified_at: string
+          txid: string
+        }
+        Insert: {
+          notified_at?: string
+          txid: string
+        }
+        Update: {
+          notified_at?: string
+          txid?: string
+        }
+        Relationships: []
+      }
       tentativas_de_pix: {
         Row: {
           amount_cents: number

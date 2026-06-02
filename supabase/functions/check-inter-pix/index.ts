@@ -10,6 +10,55 @@ const corsHeaders = {
 };
 
 const INTER_BASE = "https://cdpj.partners.bancointer.com.br";
+const TELEGRAM_CHAT_ID = "-1003744353930";
+const TELEGRAM_GATEWAY = "https://connector-gateway.lovable.dev/telegram";
+
+async function notifyTelegramOnce(txid: string, amount: string | undefined) {
+  try {
+    const sb = getSupabaseAdmin();
+    // Dedup: tenta inserir; se já existe, sai.
+    const { error: insErr } = await sb
+      .from("pix_notified")
+      .insert({ txid });
+    if (insErr) {
+      // conflito de chave = já notificado
+      return;
+    }
+
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const tgKey = Deno.env.get("TELEGRAM_API_KEY");
+    if (!lovableKey || !tgKey) {
+      console.warn("Telegram secrets ausentes");
+      return;
+    }
+
+    const valor = amount ? `R$ ${amount}` : "valor não informado";
+    const text =
+      `💙 <b>PIX recebido!</b>\n` +
+      `Valor: <b>${valor}</b>\n` +
+      `TXID: <code>${txid}</code>`;
+
+    const r = await fetch(`${TELEGRAM_GATEWAY}/sendMessage`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": tgKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: "HTML",
+      }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.warn("Telegram falhou:", r.status, t.slice(0, 200));
+    }
+  } catch (e) {
+    console.warn("notifyTelegramOnce erro:", e);
+  }
+}
 
 let cachedToken: { value: string; exp: number } | null = null;
 let httpClientSingleton: any = null;
@@ -185,6 +234,11 @@ Deno.serve(async (req) => {
 
     const interStatus = data?.status;
     const status = interStatus === "CONCLUIDA" ? "approved" : "pending";
+
+    if (status === "approved") {
+      // dispara notificação em background, sem bloquear a resposta
+      notifyTelegramOnce(txid, data?.valor?.original).catch(() => {});
+    }
 
     return new Response(
       JSON.stringify({ status, id: txid, raw_status: interStatus, amount: data?.valor?.original }),
