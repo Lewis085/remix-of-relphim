@@ -19,18 +19,21 @@ export type Database = {
           access_token: string
           expires_at: string
           id: string
+          locked_until: string | null
           updated_at: string
         }
         Insert: {
           access_token: string
           expires_at: string
           id?: string
+          locked_until?: string | null
           updated_at?: string
         }
         Update: {
           access_token?: string
           expires_at?: string
           id?: string
+          locked_until?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -88,7 +91,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      release_token_lock: { Args: never; Returns: undefined }
+      try_acquire_token_lock: {
+        Args: { lock_seconds?: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
