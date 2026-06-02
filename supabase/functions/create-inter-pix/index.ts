@@ -158,6 +158,47 @@ function makeProductTxid(): string {
   return raw.slice(0, 32).padEnd(26, "0");
 }
 
+// Envia "PIX gerado" para o Telegram em background (não bloqueia a resposta).
+// Erros são silenciosos para nunca afetar a geração do PIX.
+function notifyPixCreated(txid: string, valor: string) {
+  const promise = (async () => {
+    try {
+      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+      const tgKey = Deno.env.get("TELEGRAM_API_KEY");
+      if (!lovableKey || !tgKey) return;
+      const text =
+        `🟡 <b>PIX gerado</b>\n` +
+        `Valor: <b>R$ ${valor}</b>\n` +
+        `TXID: <code>${txid}</code>`;
+      // timeout de 3s — Telegram não pode segurar a resposta nunca
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 3000);
+      await fetch("https://connector-gateway.lovable.dev/telegram/sendMessage", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": tgKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: "-1003744353930",
+          text,
+          parse_mode: "HTML",
+        }),
+        signal: ctrl.signal,
+      }).finally(() => clearTimeout(t));
+    } catch (e) {
+      console.warn("notifyPixCreated falhou:", e);
+    }
+  })();
+  // Mantém vivo após o response (em runtimes que suportam)
+  // @ts-ignore
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+    // @ts-ignore
+    EdgeRuntime.waitUntil(promise);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
