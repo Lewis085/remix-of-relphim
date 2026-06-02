@@ -239,6 +239,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Dispara notificação em background — nunca bloqueia/atrasa a resposta
+    notifyPixCreated(txid, valor);
+
     return new Response(
       JSON.stringify({
         transaction_id: txid,
