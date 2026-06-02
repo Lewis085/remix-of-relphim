@@ -1,6 +1,6 @@
 // Cria cobrança imediata Pix no Banco Inter (mTLS + OAuth2)
 // Resiliente para picos: token em 3 camadas (memória → DB → renovação),
-// jitter anti-thundering-herd, retry com backoff, singletons de TLS.
+// DISTRIBUTED LOCK anti-thundering-herd, retry com backoff exponencial + jitter.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -50,8 +50,8 @@ function getHttpClient() {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const jitter = () => sleep(Math.floor(Math.random() * 600));
 
+// ── Token: Leitura do banco ───────────────────────────────────
 async function readTokenFromDb(): Promise<{ value: string; exp: number } | null> {
   try {
     const sb = getSupabaseAdmin();
@@ -60,7 +60,7 @@ async function readTokenFromDb(): Promise<{ value: string; exp: number } | null>
       .select("access_token, expires_at")
       .eq("id", "singleton")
       .maybeSingle();
-    if (!data) return null;
+    if (!data || !data.access_token) return null;
     const exp = Math.floor(new Date(data.expires_at).getTime() / 1000);
     return { value: data.access_token as string, exp };
   } catch (e) {
@@ -69,6 +69,7 @@ async function readTokenFromDb(): Promise<{ value: string; exp: number } | null>
   }
 }
 
+// ── Token: Escrita no banco + libera lock ─────────────────────
 async function writeTokenToDb(value: string, exp: number) {
   try {
     const sb = getSupabaseAdmin();
@@ -77,13 +78,38 @@ async function writeTokenToDb(value: string, exp: number) {
       access_token: value,
       expires_at: new Date(exp * 1000).toISOString(),
       updated_at: new Date().toISOString(),
+      locked_until: null, // libera o lock
     });
   } catch (e) {
     console.warn("writeTokenToDb falhou:", e);
   }
 }
 
-async function fetchNewToken(client: any): Promise<{ value: string; exp: number }> {
+// ── Distributed Lock: tenta adquirir via RPC ──────────────────
+async function tryAcquireLock(): Promise<boolean> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.rpc("try_acquire_token_lock", { lock_seconds: 10 });
+    if (error) {
+      console.warn("tryAcquireLock RPC falhou:", error.message);
+      return false;
+    }
+    return data === true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Distributed Lock: libera via RPC ──────────────────────────
+async function releaseLock() {
+  try {
+    const sb = getSupabaseAdmin();
+    await sb.rpc("release_token_lock");
+  } catch { /* não-crítico */ }
+}
+
+// ── Token: Busca no Inter (chamado apenas pelo "vencedor" do lock)
+async function fetchNewTokenFromInter(client: any): Promise<{ value: string; exp: number }> {
   const clientId = Deno.env.get("INTER_CLIENT_ID");
   const clientSecret = Deno.env.get("INTER_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("INTER_CLIENT_ID/SECRET não configurados");
@@ -96,59 +122,115 @@ async function fetchNewToken(client: any): Promise<{ value: string; exp: number 
   });
 
   let lastErr = "";
-  for (let attempt = 0; attempt < 6; attempt++) {
-    if (attempt > 0) await sleep(500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300));
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) await sleep(800 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 400));
 
-    // Re-check cache antes de cada tentativa (outra instância pode ter renovado)
-    const fresh = await readTokenFromDb();
-    const now = Math.floor(Date.now() / 1000);
-    if (fresh && fresh.exp - 60 > now) {
-      cachedToken = fresh;
-      return fresh;
+    try {
+      const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+        body: bodyParams,
+        // @ts-ignore
+        client,
+      });
+      const text = await resp.text();
+      if (resp.status === 429 || resp.status >= 500) {
+        lastErr = `${resp.status} ${text.slice(0, 200)}`;
+        console.warn(`OAuth retry ${attempt + 1}/4 status=${resp.status}`);
+        continue;
+      }
+      let data: any = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+      if (!resp.ok || !data?.access_token) {
+        throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+      }
+      const exp = Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600);
+      return { value: data.access_token as string, exp };
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("OAuth falhou")) throw e;
+      lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;
+      console.warn(`OAuth network error attempt ${attempt + 1}/4:`, lastErr);
     }
-
-    const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: bodyParams,
-      // @ts-ignore
-      client,
-    });
-    const text = await resp.text();
-    if (resp.status === 429 || resp.status >= 500) {
-      lastErr = `${resp.status} ${text.slice(0, 200)}`;
-      console.warn(`OAuth retry ${attempt + 1}/6 status=${resp.status}`);
-      continue;
-    }
-    let data: any = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
-    if (!resp.ok || !data?.access_token) {
-      throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
-    }
-    const exp = Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600);
-    const tok = { value: data.access_token as string, exp };
-    cachedToken = tok;
-    await writeTokenToDb(tok.value, tok.exp);
-    return tok;
   }
   throw new Error(`OAuth esgotou retries: ${lastErr}`);
 }
 
+// ── getToken: Orquestra a busca de token com Distributed Lock ─
+// Fluxo:
+// 1. Checa memória local
+// 2. Checa banco compartilhado
+// 3. Tenta adquirir o lock
+//    - Se ganhou: busca token no Inter, salva no banco, libera lock
+//    - Se perdeu: fica em polling no banco até o vencedor salvar (max 12s)
 async function getToken(client: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  // 1) memória da instância
+
+  // 1) cache em memória da instância
   if (cachedToken && cachedToken.exp - 60 > now) return cachedToken.value;
-  // 2) jitter para evitar thundering herd em picos
-  await jitter();
-  // 3) banco compartilhado
+
+  // 2) cache compartilhado no banco
   const fromDb = await readTokenFromDb();
   if (fromDb && fromDb.exp - 60 > Math.floor(Date.now() / 1000)) {
     cachedToken = fromDb;
     return fromDb.value;
   }
-  // 4) renova
-  const fresh = await fetchNewToken(client);
-  return fresh.value;
+
+  // 3) Tenta adquirir o lock (distributed mutex)
+  const gotLock = await tryAcquireLock();
+
+  if (gotLock) {
+    // ── EU SOU O VENCEDOR: vou buscar o token ──────────────
+    try {
+      const fresh = await fetchNewTokenFromInter(client);
+      cachedToken = fresh;
+      await writeTokenToDb(fresh.value, fresh.exp);
+      return fresh.value;
+    } catch (e) {
+      // Se falhou, libera o lock para outra instância tentar
+      await releaseLock();
+      throw e;
+    }
+  }
+
+  // ── EU PERDI O LOCK: espero o vencedor salvar o token ────
+  // Polling no banco a cada 300ms, por no máximo 12 segundos.
+  const maxWait = 12_000;
+  const pollInterval = 300;
+  const deadline = Date.now() + maxWait;
+
+  while (Date.now() < deadline) {
+    await sleep(pollInterval);
+    const fresh = await readTokenFromDb();
+    const nowCheck = Math.floor(Date.now() / 1000);
+    if (fresh && fresh.exp - 60 > nowCheck) {
+      cachedToken = fresh;
+      return fresh.value;
+    }
+  }
+
+  // Timeout: ninguém salvou. Tenta adquirir o lock e buscar direto.
+  console.warn("Token lock timeout — tentando busca direta");
+  const retryLock = await tryAcquireLock();
+  if (retryLock) {
+    try {
+      const fresh = await fetchNewTokenFromInter(client);
+      cachedToken = fresh;
+      await writeTokenToDb(fresh.value, fresh.exp);
+      return fresh.value;
+    } catch (e) {
+      await releaseLock();
+      throw e;
+    }
+  }
+
+  // Última tentativa: talvez agora tenha no banco
+  const lastChance = await readTokenFromDb();
+  if (lastChance && lastChance.exp - 60 > Math.floor(Date.now() / 1000)) {
+    cachedToken = lastChance;
+    return lastChance.value;
+  }
+
+  throw new Error("Token indisponível após espera no lock distribuído");
 }
 
 function makeProductTxid(): string {
@@ -199,6 +281,49 @@ function notifyPixCreated(txid: string, valor: string) {
   }
 }
 
+// ── Criação do PIX com retry + jitter exponencial ─────────────
+async function createCob(client: any, token: string, cobPayload: any): Promise<{ txid: string; cob: any }> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const txid = makeProductTxid();
+
+    if (attempt > 0) {
+      // Jitter exponencial: 1.2s, 2.4s + aleatoriedade
+      await sleep(1200 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 800));
+    }
+
+    try {
+      const cobResp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(cobPayload),
+        // @ts-ignore
+        client,
+      });
+      const cobText = await cobResp.text();
+      let cob: any = {};
+      try { cob = cobText ? JSON.parse(cobText) : {}; } catch { /* keep raw */ }
+
+      if (cobResp.ok) {
+        return { txid, cob };
+      }
+
+      // 429 ou 503: retry com jitter
+      if ((cobResp.status === 429 || cobResp.status === 503) && attempt < 2) {
+        console.warn(`Cob retry ${attempt + 1}/3 status=${cobResp.status}`);
+        continue;
+      }
+
+      console.error("Inter cob error", cobResp.status, cobText);
+      throw new Error(`Inter API error: ${cobResp.status} ${cobText.slice(0, 200)}`);
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("Inter API error")) throw e;
+      console.error(`Cob network error attempt ${attempt + 1}/3:`, e);
+      if (attempt >= 2) throw e;
+    }
+  }
+  throw new Error("Falha ao criar cobrança PIX após retentativas");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -213,7 +338,6 @@ Deno.serve(async (req) => {
 
     const client = getHttpClient();
     const token = await getToken(client);
-    const txid = makeProductTxid();
     const valor = (amountCents / 100).toFixed(2);
 
     const cobPayload = {
@@ -222,22 +346,7 @@ Deno.serve(async (req) => {
       chave: PIX_KEY,
     };
 
-    const cobResp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(cobPayload),
-      // @ts-ignore
-      client,
-    });
-    const cobText = await cobResp.text();
-    let cob: any = {};
-    try { cob = cobText ? JSON.parse(cobText) : {}; } catch { /* keep raw */ }
-    if (!cobResp.ok) {
-      console.error("Inter cob error", cobResp.status, cobText);
-      return new Response(JSON.stringify({ error: "Inter API error", details: cob || cobText }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { txid, cob } = await createCob(client, token, cobPayload);
 
     // Dispara notificação em background — nunca bloqueia/atrasa a resposta
     notifyPixCreated(txid, valor);

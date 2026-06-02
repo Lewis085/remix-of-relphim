@@ -23,6 +23,7 @@ type PixData = {
   reference:       string;
   amount:          number;
   expires_at?:     string;
+  donor_name?:     string;
 };
 
 // ── Passos de instrução ────────────────────────────────────────
@@ -131,7 +132,7 @@ const Pix = () => {
             <CheckCircle2 className="h-10 w-10 text-primary" />
           </div>
           <h1 className="mt-5 font-display text-2xl font-bold text-foreground">
-            Pagamento confirmado! 🎉
+            {pix?.donor_name ? `${pix.donor_name}, pagamento confirmado! 🎉` : "Pagamento confirmado! 🎉"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sua doação de <strong className="text-primary">R$ {formatBRL(valor)}</strong> foi

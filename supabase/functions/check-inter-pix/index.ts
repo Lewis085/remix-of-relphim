@@ -1,5 +1,6 @@
 // Consulta status de cobrança Pix no Banco Inter
 // Resiliente: nunca devolve 5xx para o polling. Erros viram 200 pending.
+// DISTRIBUTED LOCK para renovação de token (mesmo padrão do create-inter-pix).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -60,6 +61,7 @@ async function notifyTelegramOnce(txid: string, amount: string | undefined) {
   }
 }
 
+// ── Singletons ────────────────────────────────────────────────
 let cachedToken: { value: string; exp: number } | null = null;
 let httpClientSingleton: any = null;
 let supabaseAdminSingleton: ReturnType<typeof createClient> | null = null;
@@ -96,8 +98,8 @@ function getHttpClient() {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const jitter = () => sleep(Math.floor(Math.random() * 600));
 
+// ── Token: Leitura do banco ───────────────────────────────────
 async function readTokenFromDb(): Promise<{ value: string; exp: number } | null> {
   try {
     const sb = getSupabaseAdmin();
@@ -106,7 +108,7 @@ async function readTokenFromDb(): Promise<{ value: string; exp: number } | null>
       .select("access_token, expires_at")
       .eq("id", "singleton")
       .maybeSingle();
-    if (!data) return null;
+    if (!data || !data.access_token) return null;
     return {
       value: data.access_token as string,
       exp: Math.floor(new Date(data.expires_at).getTime() / 1000),
@@ -114,6 +116,7 @@ async function readTokenFromDb(): Promise<{ value: string; exp: number } | null>
   } catch { return null; }
 }
 
+// ── Token: Escrita no banco + libera lock ─────────────────────
 async function writeTokenToDb(value: string, exp: number) {
   try {
     const sb = getSupabaseAdmin();
@@ -122,11 +125,30 @@ async function writeTokenToDb(value: string, exp: number) {
       access_token: value,
       expires_at: new Date(exp * 1000).toISOString(),
       updated_at: new Date().toISOString(),
+      locked_until: null,
     });
   } catch { /* não-crítico */ }
 }
 
-async function fetchNewToken(client: any): Promise<{ value: string; exp: number }> {
+// ── Distributed Lock ──────────────────────────────────────────
+async function tryAcquireLock(): Promise<boolean> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.rpc("try_acquire_token_lock", { lock_seconds: 10 });
+    if (error) return false;
+    return data === true;
+  } catch { return false; }
+}
+
+async function releaseLock() {
+  try {
+    const sb = getSupabaseAdmin();
+    await sb.rpc("release_token_lock");
+  } catch { /* não-crítico */ }
+}
+
+// ── Token: Busca no Inter (somente o vencedor do lock) ────────
+async function fetchNewTokenFromInter(client: any): Promise<{ value: string; exp: number }> {
   const clientId = Deno.env.get("INTER_CLIENT_ID");
   const clientSecret = Deno.env.get("INTER_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("INTER_CLIENT_ID/SECRET não configurados");
@@ -139,53 +161,98 @@ async function fetchNewToken(client: any): Promise<{ value: string; exp: number 
   });
 
   let lastErr = "";
-  for (let attempt = 0; attempt < 6; attempt++) {
-    if (attempt > 0) await sleep(500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300));
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) await sleep(800 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 400));
 
-    const fresh = await readTokenFromDb();
-    const now = Math.floor(Date.now() / 1000);
-    if (fresh && fresh.exp - 60 > now) {
-      cachedToken = fresh;
-      return fresh;
+    try {
+      const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+        body: bodyParams,
+        // @ts-ignore
+        client,
+      });
+      const text = await resp.text();
+      if (resp.status === 429 || resp.status >= 500) {
+        lastErr = `${resp.status}`;
+        continue;
+      }
+      let data: any = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+      if (!resp.ok || !data?.access_token) {
+        throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+      }
+      const exp = Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600);
+      return { value: data.access_token as string, exp };
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("OAuth falhou")) throw e;
+      lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;
     }
-
-    const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: bodyParams,
-      // @ts-ignore
-      client,
-    });
-    const text = await resp.text();
-    if (resp.status === 429 || resp.status >= 500) {
-      lastErr = `${resp.status}`;
-      continue;
-    }
-    let data: any = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
-    if (!resp.ok || !data?.access_token) {
-      throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
-    }
-    const exp = Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600);
-    const tok = { value: data.access_token as string, exp };
-    cachedToken = tok;
-    await writeTokenToDb(tok.value, tok.exp);
-    return tok;
   }
   throw new Error(`OAuth esgotou retries: ${lastErr}`);
 }
 
+// ── getToken: Orquestra busca com Distributed Lock ────────────
 async function getToken(client: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
+
+  // 1) memória local
   if (cachedToken && cachedToken.exp - 60 > now) return cachedToken.value;
-  await jitter();
+
+  // 2) banco compartilhado
   const fromDb = await readTokenFromDb();
   if (fromDb && fromDb.exp - 60 > Math.floor(Date.now() / 1000)) {
     cachedToken = fromDb;
     return fromDb.value;
   }
-  const fresh = await fetchNewToken(client);
-  return fresh.value;
+
+  // 3) Distributed Lock
+  const gotLock = await tryAcquireLock();
+
+  if (gotLock) {
+    try {
+      const fresh = await fetchNewTokenFromInter(client);
+      cachedToken = fresh;
+      await writeTokenToDb(fresh.value, fresh.exp);
+      return fresh.value;
+    } catch (e) {
+      await releaseLock();
+      throw e;
+    }
+  }
+
+  // Perdeu o lock: polling no banco até o vencedor salvar (max 12s)
+  const deadline = Date.now() + 12_000;
+  while (Date.now() < deadline) {
+    await sleep(300);
+    const fresh = await readTokenFromDb();
+    if (fresh && fresh.exp - 60 > Math.floor(Date.now() / 1000)) {
+      cachedToken = fresh;
+      return fresh.value;
+    }
+  }
+
+  // Timeout: tenta buscar direto
+  const retryLock = await tryAcquireLock();
+  if (retryLock) {
+    try {
+      const fresh = await fetchNewTokenFromInter(client);
+      cachedToken = fresh;
+      await writeTokenToDb(fresh.value, fresh.exp);
+      return fresh.value;
+    } catch (e) {
+      await releaseLock();
+      throw e;
+    }
+  }
+
+  const lastChance = await readTokenFromDb();
+  if (lastChance && lastChance.exp - 60 > Math.floor(Date.now() / 1000)) {
+    cachedToken = lastChance;
+    return lastChance.value;
+  }
+
+  throw new Error("Token indisponível após espera no lock distribuído");
 }
 
 // Devolve sempre 200 pending em qualquer falha para não derrubar o polling.
