@@ -1,4 +1,7 @@
 // Consulta status de cobrança Pix no Banco Inter
+// Resiliente: nunca devolve 5xx para o polling. Erros viram 200 pending.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -9,9 +12,18 @@ const corsHeaders = {
 const INTER_BASE = "https://cdpj.partners.bancointer.com.br";
 
 let cachedToken: { value: string; exp: number } | null = null;
+let httpClientSingleton: any = null;
+let supabaseAdminSingleton: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseAdmin() {
+  if (supabaseAdminSingleton) return supabaseAdminSingleton;
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  supabaseAdminSingleton = createClient(url, key, { auth: { persistSession: false } });
+  return supabaseAdminSingleton;
+}
 
 function normalizePem(value: string, label: string): string {
-
   let v = value.trim().replace(/^(['"`])([\s\S]*)\1$/, "$2");
   v = v.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r\n/g, "\n").trim();
   const m = v.match(/-----BEGIN ([A-Z ]+)-----([\s\S]+?)-----END \1-----/);
@@ -22,21 +34,50 @@ function normalizePem(value: string, label: string): string {
   return `-----BEGIN ${m[1]}-----\n${wrapped}\n-----END ${m[1]}-----\n`;
 }
 
-
-async function getHttpClient() {
+function getHttpClient() {
+  if (httpClientSingleton) return httpClientSingleton;
   const rawCert = Deno.env.get("INTER_CERT_PEM");
   const rawKey = Deno.env.get("INTER_KEY_PEM");
-  const cert = rawCert ? normalizePem(rawCert, "INTER_CERT_PEM") : null;
-  const key = rawKey ? normalizePem(rawKey, "INTER_KEY_PEM") : null;
-  if (!cert || !key) throw new Error("INTER_CERT_PEM/INTER_KEY_PEM não configurados");
+  if (!rawCert || !rawKey) throw new Error("INTER_CERT_PEM/INTER_KEY_PEM não configurados");
+  const cert = normalizePem(rawCert, "INTER_CERT_PEM");
+  const key = normalizePem(rawKey, "INTER_KEY_PEM");
   // @ts-ignore
-  return Deno.createHttpClient({ cert, key });
+  httpClientSingleton = Deno.createHttpClient({ cert, key });
+  return httpClientSingleton;
 }
 
-async function getToken(client: any): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-  if (cachedToken && cachedToken.exp - 30 > now) return cachedToken.value;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const jitter = () => sleep(Math.floor(Math.random() * 600));
 
+async function readTokenFromDb(): Promise<{ value: string; exp: number } | null> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data } = await sb
+      .from("inter_token_cache")
+      .select("access_token, expires_at")
+      .eq("id", "singleton")
+      .maybeSingle();
+    if (!data) return null;
+    return {
+      value: data.access_token as string,
+      exp: Math.floor(new Date(data.expires_at).getTime() / 1000),
+    };
+  } catch { return null; }
+}
+
+async function writeTokenToDb(value: string, exp: number) {
+  try {
+    const sb = getSupabaseAdmin();
+    await sb.from("inter_token_cache").upsert({
+      id: "singleton",
+      access_token: value,
+      expires_at: new Date(exp * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  } catch { /* não-crítico */ }
+}
+
+async function fetchNewToken(client: any): Promise<{ value: string; exp: number }> {
   const clientId = Deno.env.get("INTER_CLIENT_ID");
   const clientSecret = Deno.env.get("INTER_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("INTER_CLIENT_ID/SECRET não configurados");
@@ -48,8 +89,17 @@ async function getToken(client: any): Promise<string> {
     scope: "cob.write cob.read pix.read",
   });
 
-  // Tenta obter token com 1 retry após 1.5s em caso de rate limit
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let lastErr = "";
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (attempt > 0) await sleep(500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300));
+
+    const fresh = await readTokenFromDb();
+    const now = Math.floor(Date.now() / 1000);
+    if (fresh && fresh.exp - 60 > now) {
+      cachedToken = fresh;
+      return fresh;
+    }
+
     const resp = await fetch(`${INTER_BASE}/oauth/v2/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
@@ -57,52 +107,65 @@ async function getToken(client: any): Promise<string> {
       // @ts-ignore
       client,
     });
-
-    if (resp.status === 429 && attempt === 0) {
-      console.warn("Inter OAuth rate limited (check), aguardando 1.5s para retry...");
-      await resp.text(); // consume body
-      await new Promise((r) => setTimeout(r, 1500));
+    const text = await resp.text();
+    if (resp.status === 429 || resp.status >= 500) {
+      lastErr = `${resp.status}`;
       continue;
     }
-
-    const text = await resp.text();
     let data: any = {};
     try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
-    if (!resp.ok) throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
-    if (!data?.access_token) throw new Error(`OAuth sem access_token: ${text || "(empty body)"}`);
-    cachedToken = { value: data.access_token, exp: now + Number(data.expires_in || 3600) };
-    return cachedToken.value;
+    if (!resp.ok || !data?.access_token) {
+      throw new Error(`OAuth falhou: ${resp.status} ${text || "(empty body)"}`);
+    }
+    const exp = Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600);
+    const tok = { value: data.access_token as string, exp };
+    cachedToken = tok;
+    await writeTokenToDb(tok.value, tok.exp);
+    return tok;
   }
+  throw new Error(`OAuth esgotou retries: ${lastErr}`);
+}
 
-  throw new Error("OAuth falhou após retry (rate limit persistente)");
+async function getToken(client: any): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedToken && cachedToken.exp - 60 > now) return cachedToken.value;
+  await jitter();
+  const fromDb = await readTokenFromDb();
+  if (fromDb && fromDb.exp - 60 > Math.floor(Date.now() / 1000)) {
+    cachedToken = fromDb;
+    return fromDb.value;
+  }
+  const fresh = await fetchNewToken(client);
+  return fresh.value;
+}
+
+// Devolve sempre 200 pending em qualquer falha para não derrubar o polling.
+function pending(txid: string, raw = "PENDING") {
+  return new Response(
+    JSON.stringify({ status: "pending", id: txid, raw_status: raw }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  try {
-    const url = new URL(req.url);
-    const txid = url.searchParams.get("id");
-    if (!txid) {
-      return new Response(JSON.stringify({ error: "Missing id" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  const url = new URL(req.url);
+  const txid = url.searchParams.get("id") || "";
+  if (!txid) {
+    return new Response(JSON.stringify({ error: "Missing id" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
-    const client = await getHttpClient();
+  try {
+    const client = getHttpClient();
     let token: string;
     try {
       token = await getToken(client);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      // Em caso de rate-limit no OAuth, devolve pending para o polling continuar sem 500
-      if (msg.includes("429")) {
-        return new Response(
-          JSON.stringify({ status: "pending", id: txid, raw_status: "RATE_LIMITED" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      throw e;
+      console.warn("getToken falhou:", e);
+      return pending(txid, "TOKEN_UNAVAILABLE");
     }
 
     const resp = await fetch(`${INTER_BASE}/pix/v2/cob/${txid}`, {
@@ -113,13 +176,13 @@ Deno.serve(async (req) => {
     const text = await resp.text();
     let data: any = {};
     try { data = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+
     if (!resp.ok) {
-      return new Response(JSON.stringify({ error: "Inter API error", status: resp.status, details: data || text }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Qualquer 4xx/5xx do Inter: mantém polling ativo
+      console.warn(`Inter cob status=${resp.status} body=${text.slice(0, 200)}`);
+      return pending(txid, `INTER_${resp.status}`);
     }
 
-    // Inter status: ATIVA, CONCLUIDA, REMOVIDA_PELO_USUARIO_RECEBEDOR, REMOVIDA_PELO_PSP
     const interStatus = data?.status;
     const status = interStatus === "CONCLUIDA" ? "approved" : "pending";
 
@@ -128,9 +191,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("check-inter-pix erro inesperado:", err);
+    // Nunca devolve 5xx ao cliente — polling continua
+    return pending(txid, "INTERNAL_ERROR");
   }
 });

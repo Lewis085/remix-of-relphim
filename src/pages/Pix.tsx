@@ -64,14 +64,21 @@ const Pix = () => {
     return () => clearInterval(id);
   }, []);
 
-  // Polling de confirmação
+  // Polling de confirmação com backoff exponencial em erro (5s → 7.5s → 11s → 15s).
+  // Reseta para 5s a cada resposta bem-sucedida. Para quando aprovado.
   useEffect(() => {
     if (!pix || paid) return;
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const anonKey   = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     const url = `https://${projectId}.supabase.co/functions/v1/check-inter-pix?id=${pix.transaction_id}`;
 
-    const id = setInterval(async () => {
+    let cancelled = false;
+    let delay = 5000;
+    const MIN_DELAY = 5000;
+    const MAX_DELAY = 15000;
+
+    const tick = async () => {
+      if (cancelled) return;
       try {
         const r = await fetch(url, { headers: { Authorization: `Bearer ${anonKey}`, apikey: anonKey } });
         const j = await r.json();
@@ -81,16 +88,23 @@ const Pix = () => {
           sessionStorage.removeItem("paradise_pix");
           if (!trackedRef.current) {
             trackedRef.current = true;
-            // Usa o valor real confirmado pelo Inter quando disponível
             const realAmount = j?.amount ? parseFloat(j.amount) : pix.amount;
             trackPurchase(realAmount, String(pix.reference));
           }
+          return; // para o polling
         }
-      } catch (e) { console.warn("poll error", e); }
-    }, 5000);
+        delay = MIN_DELAY; // sucesso → reseta
+      } catch (e) {
+        console.warn("poll error", e);
+        delay = Math.min(Math.round(delay * 1.5), MAX_DELAY);
+      }
+      if (!cancelled) setTimeout(tick, delay);
+    };
 
-    return () => clearInterval(id);
+    const timer = setTimeout(tick, delay);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [pix, paid]);
+
 
   const handleCopy = async () => {
     if (!pix) return;
