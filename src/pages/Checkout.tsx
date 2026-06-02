@@ -104,6 +104,8 @@ const Checkout = () => {
   const goToStep2 = () => {
     if (!valid) return;
     setStep(2);
+    // Funil TikTok: o usuário INICIOU o checkout ao chegar no formulário
+    trackInitiateCheckout(total);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -116,6 +118,9 @@ const Checkout = () => {
     if (!valid || !formValid) return;
     setProcessing(true);
 
+    // Advanced Matching: envia email/telefone pro TikTok cruzar com a base de usuários
+    trackIdentify(email, telefone);
+
     try {
       const totalCents = Math.round(total * 100);
       const discount = Math.floor(Math.random() * 3) + 7;
@@ -127,11 +132,6 @@ const Checkout = () => {
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
 
       const chargedAmount = chargeCents / 100;
-      
-      // Envia os dados do formulário para o TikTok Pixel (Advanced Matching) antes do evento
-      trackIdentify(email, telefone);
-      // Dispara InitiateCheckout com o ID real da transação
-      trackInitiateCheckout(chargedAmount, data.transaction_id);
 
       sessionStorage.setItem(
         "inter_pix",
