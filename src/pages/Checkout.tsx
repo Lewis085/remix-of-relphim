@@ -123,15 +123,13 @@ const Checkout = () => {
 
     try {
       const totalCents = Math.round(total * 100);
-      const discount = Math.floor(Math.random() * 3) + 7;
-      const chargeCents = Math.max(100, totalCents - discount);
 
       const { data, error: fnErr } = await supabase.functions.invoke("create-inter-pix", {
-        body: { amount: chargeCents },
+        body: { amount: totalCents },
       });
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
 
-      const chargedAmount = chargeCents / 100;
+      const chargedAmount = totalCents / 100;
 
       sessionStorage.setItem(
         "inter_pix",
