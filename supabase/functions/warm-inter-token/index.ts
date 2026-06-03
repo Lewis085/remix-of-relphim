@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
     });
     const text = await resp.text();
     if (!resp.ok) {
-      return new Response(JSON.stringify({ ok: false, status: resp.status, body: text.slice(0, 300) }), {
+      console.error("warm-inter-token OAuth falhou:", resp.status, text.slice(0, 300));
+      return new Response(JSON.stringify({ ok: false }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
