@@ -267,9 +267,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = new URL(req.url);
-  const txid = url.searchParams.get("id") || "";
+  const rawId = url.searchParams.get("id") || "";
+  const txid = rawId.replace(/[^A-Za-z0-9]/g, "");
   if (!txid) {
-    return new Response(JSON.stringify({ error: "Missing id" }), {
+    return new Response(JSON.stringify({ error: "Invalid or missing id" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

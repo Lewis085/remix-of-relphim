@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const amountCents = Number(body?.amount);
-    if (!Number.isInteger(amountCents) || amountCents < 100) {
+    if (!Number.isInteger(amountCents) || amountCents < 2000) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -364,8 +364,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error(err);
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "Internal server error. Please try again later." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
