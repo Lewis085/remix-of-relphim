@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const amountCents = Number(body?.amount);
-    if (!Number.isInteger(amountCents) || amountCents < 2000 || amountCents > 40000) {
+    if (!Number.isInteger(amountCents) || amountCents < 2000 || amountCents > 200000) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

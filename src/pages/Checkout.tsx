@@ -13,7 +13,7 @@ const PRESETS = [25, 35, 50, 75, 100, 150, 200, 250];
 const BIG_PRESET = 350;
 const POPULAR = 50;
 const MIN = 20;
-const MAX = 400;
+const MAX = 2000;
 
 // "Turbine" — add-ons com emoji e impacto concreto
 const TURBO = [
