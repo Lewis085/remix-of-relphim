@@ -90,7 +90,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
         </div>
 
         {/* ── Headline ─────────────────────────────────────── */}
-        <div className="mb-6 animate-fade-in-up delay-100">
+        <div className="mb-6">
           <h1 className="max-w-2xl text-3xl sm:text-4xl lg:text-[2.75rem] text-foreground">
             Ajude a Duda a vencer<br className="hidden sm:block" />
             a AME Tipo 1
@@ -108,7 +108,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
           <div className="min-w-0">
 
             {/* Banner */}
-            <div className="animate-fade-in-up delay-200 overflow-hidden rounded-xl">
+            <div className="overflow-hidden rounded-xl">
               <img
                 src={bannerCeleste}
                 alt="Pequena Duda — bebê com AME Tipo 1"
@@ -116,6 +116,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
                 width={1280}
                 height={768}
                 loading="eager"
+                fetchPriority="high"
               />
             </div>
 
