@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ ok: false, error: msg }), {
+    console.error("warm-inter-token erro:", err);
+    return new Response(JSON.stringify({ ok: false }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
