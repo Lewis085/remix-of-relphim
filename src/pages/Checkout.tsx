@@ -99,7 +99,7 @@ const Checkout = () => {
     setExtras((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   // ── Step 2 validation ───────────────────────────────────────
-  const formValid = nome.trim().length >= 2 && sobrenome.trim().length >= 1 && isValidEmail(email) && isValidPhone(telefone);
+  const formValid = nome.trim().length >= 2 && sobrenome.trim().length >= 1 && isValidEmail(email);
 
   const goToStep2 = () => {
     if (!valid) return;
@@ -435,7 +435,7 @@ const Checkout = () => {
                 {/* Telefone / WhatsApp */}
                 <div>
                   <label htmlFor="donor-phone" className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Phone className="h-3.5 w-3.5" /> WhatsApp
+                    <Phone className="h-3.5 w-3.5" /> WhatsApp <span className="text-muted-foreground/60">(opcional)</span>
                   </label>
                   <input
                     id="donor-phone"
