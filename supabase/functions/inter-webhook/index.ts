@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sendTikTokCapi } from "../_shared/tiktokCapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,9 +95,20 @@ Deno.serve(async (req) => {
       // 3. Notify Telegram (and in the future, Utmify)
       await notifyTelegramOnce(txid, valor, tx);
       
-      // TODO: FUTURE UTMIFY INTEGRATION HERE
-      // We have tx.donor_name, tx.donor_email, tx.donor_phone, and tx.amount
-      // e.g. sendUtmifyConversion(tx);
+      // 4. TikTok CAPI (Purchase)
+      if (tx) {
+        await sendTikTokCapi({
+          eventName: "Purchase",
+          eventId: txid,
+          amount: valor,
+          url: tx.url,
+          ttclid: tx.ttclid,
+          ipAddress: tx.ip_address,
+          userAgent: tx.user_agent,
+          donorEmail: tx.donor_email,
+          donorPhone: tx.donor_phone,
+        });
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {

@@ -6,7 +6,7 @@ import seloSeguranca from "@/assets/selo-seguranca.webp";
 import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { trackInitiateCheckout, trackIdentify } from "@/lib/tiktokPixel";
+import { trackInitiateCheckout, trackIdentify, getTtclid } from "@/lib/tiktokPixel";
 
 // ── Configuração de preços (psicologia de ancoragem) ──────────
 const PRESETS = [25, 35, 50, 75, 100, 150, 200, 250];
@@ -129,7 +129,9 @@ const Checkout = () => {
           amount: totalCents,
           donor_name: `${nome.trim()} ${sobrenome.trim()}`.trim(),
           donor_email: email.trim(),
-          donor_phone: telefone.replace(/\D/g, "")
+          donor_phone: telefone.replace(/\D/g, ""),
+          ttclid: getTtclid() || undefined,
+          url: window.location.href,
         },
       });
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");

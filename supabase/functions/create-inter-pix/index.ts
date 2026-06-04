@@ -2,6 +2,7 @@
 // Resiliente para picos: token em 3 camadas (memória → DB → renovação),
 // DISTRIBUTED LOCK anti-thundering-herd, retry com backoff exponencial + jitter.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sendTikTokCapi } from "../_shared/tiktokCapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -348,6 +349,9 @@ Deno.serve(async (req) => {
 
     const { txid, cob } = await createCob(client, token, cobPayload);
 
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined;
+    const userAgent = req.headers.get("user-agent") || undefined;
+
     // Save transaction to database for webhook usage
     const supabaseAdmin = getSupabaseAdmin();
     await supabaseAdmin.from("pix_transactions").insert({
@@ -356,8 +360,25 @@ Deno.serve(async (req) => {
       donor_name: body?.donor_name || null,
       donor_email: body?.donor_email || null,
       donor_phone: body?.donor_phone || null,
+      ttclid: body?.ttclid || null,
+      url: body?.url || null,
+      ip_address: ipAddress,
+      user_agent: userAgent,
       status: 'pending'
     }).catch(err => console.error("Failed to insert pix_transaction:", err));
+
+    // Dispara CAPI: InitiateCheckout
+    sendTikTokCapi({
+      eventName: "InitiateCheckout",
+      eventId: txid,
+      amount: valor,
+      url: body?.url,
+      ttclid: body?.ttclid,
+      ipAddress,
+      userAgent,
+      donorEmail: body?.donor_email,
+      donorPhone: body?.donor_phone,
+    });
 
     // Dispara notificação em background — nunca bloqueia/atrasa a resposta
     notifyPixCreated(txid, valor);

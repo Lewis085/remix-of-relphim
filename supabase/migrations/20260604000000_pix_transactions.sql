@@ -5,6 +5,10 @@ CREATE TABLE IF NOT EXISTS public.pix_transactions (
     donor_email text,
     donor_phone text,
     status text DEFAULT 'pending',
+    ttclid text,
+    user_agent text,
+    ip_address text,
+    url text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );

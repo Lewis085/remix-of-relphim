@@ -11,6 +11,14 @@ declare global {
   }
 }
 
+/** Obtém o ttclid (TikTok Click ID) do cookie, caso exista */
+export const getTtclid = (): string | undefined => {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(/(^|;)\s*_tt_enable_cookie\s*=\s*1/); // Optional check if cookies are enabled
+  const ttclidMatch = document.cookie.match(/(^|;)\s*ttclid\s*=\s*([^;]+)/);
+  return ttclidMatch ? ttclidMatch[2] : undefined;
+};
+
 /** Dispara o evento de visualização de conteúdo (Landing Page) */
 export const trackViewContent = () => {
   if (typeof window === "undefined" || !window.ttq) return;
