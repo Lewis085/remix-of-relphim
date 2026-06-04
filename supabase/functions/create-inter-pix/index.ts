@@ -2,8 +2,117 @@
 // Resiliente para picos: token em 3 camadas (memória → DB → renovação),
 // DISTRIBUTED LOCK anti-thundering-herd, retry com backoff exponencial + jitter.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { sendTikTokCapi } from "./_shared/tiktokCapi.ts";
-import { sendUtmifyPostback } from "./_shared/utmify.ts";
+// ── TikTok CAPI (inlined) ─────────────────────────────────────
+async function hashSha256(str: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+interface TikTokCapiData {
+  eventName: "InitiateCheckout" | "Purchase";
+  eventId: string;
+  amount: string | number;
+  url?: string;
+  ttclid?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  donorEmail?: string;
+  donorPhone?: string;
+}
+
+async function sendTikTokCapi(data: TikTokCapiData) {
+  const TIKTOK_PIXEL_ID = "D7OECCJC77U471PH1560";
+  const TIKTOK_ACCESS_TOKEN = "9f18d5319ffbf9ed7a31f633beff728e8dd90986";
+  const payload: any = {
+    pixel_code: TIKTOK_PIXEL_ID,
+    event: data.eventName,
+    event_id: data.eventId,
+    event_time: Math.floor(Date.now() / 1000),
+    context: {
+      page: { url: data.url || "https://dudapacientezero.com.br/checkout" },
+      user: {
+        ttclid: data.ttclid || undefined,
+        ip: data.ipAddress || undefined,
+        user_agent: data.userAgent || undefined,
+      }
+    },
+    properties: {
+      contents: [{ price: Number(data.amount), quantity: 1, content_id: data.eventId, content_type: "product", content_name: "Oferta Validada" }],
+      value: Number(data.amount),
+      currency: "BRL"
+    }
+  };
+  if (data.donorEmail) payload.context.user.email = await hashSha256(data.donorEmail.trim().toLowerCase());
+  if (data.donorPhone) {
+    const cleanPhone = data.donorPhone.replace(/\D/g, "");
+    if (cleanPhone.length >= 10) payload.context.user.phone_number = await hashSha256(`+55${cleanPhone}`);
+  }
+  try {
+    const response = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
+      method: "POST",
+      headers: { "Access-Token": TIKTOK_ACCESS_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) { const errText = await response.text(); console.warn(`TikTok CAPI falhou para ${data.eventName}:`, response.status, errText); }
+    else { const respJson = await response.json(); console.log(`TikTok CAPI sucesso para ${data.eventName}:`, respJson); }
+  } catch (err) { console.error(`Erro ao disparar TikTok CAPI (${data.eventName}):`, err); }
+}
+
+// ── Utmify (inlined) ──────────────────────────────────────────
+interface UtmifyOrderData {
+  orderId: string;
+  status: "waiting_payment" | "paid";
+  amountInCents: number;
+  donorName?: string;
+  donorEmail?: string;
+  donorPhone?: string;
+  ipAddress?: string;
+  url?: string;
+  createdAt?: string;
+}
+
+function extractUtms(urlStr?: string) {
+  const nullUtms = { utm_source: null, utm_campaign: null, utm_medium: null, utm_content: null, utm_term: null, src: null, sck: null };
+  if (!urlStr) return nullUtms;
+  try {
+    const url = new URL(urlStr);
+    const params = url.searchParams;
+    const utms: Record<string, any> = {};
+    for (const field of ["utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term", "src", "sck"]) {
+      utms[field] = params.has(field) ? params.get(field)! : null;
+    }
+    return utms;
+  } catch { return nullUtms; }
+}
+
+async function sendUtmifyPostback(data: UtmifyOrderData) {
+  const API_TOKEN = "D6sjrdgGMIkI9f9zh5VTPd4x2FzHRvASNrPJ";
+  const payload: any = {
+    orderId: data.orderId, platform: "pacientzero", paymentMethod: "pix", status: data.status,
+    customer: { document: null },
+    products: [{ id: "oferta-validada", name: "Oferta Validada", quantity: 1, priceInCents: data.amountInCents, planId: "unico", planName: "Doacao Unica" }],
+    commission: { totalPriceInCents: data.amountInCents, gatewayFeeInCents: 0, userCommissionInCents: data.amountInCents },
+    isTest: false,
+    trackingParameters: extractUtms(data.url)
+  };
+  const d = data.createdAt ? new Date(data.createdAt) : new Date();
+  const dateStr = d.toISOString().replace("T", " ").substring(0, 19);
+  payload.createdAt = dateStr;
+  payload.approvedDate = dateStr;
+  if (data.donorName) payload.customer.name = data.donorName;
+  if (data.donorEmail) payload.customer.email = data.donorEmail.trim().toLowerCase();
+  if (data.donorPhone) payload.customer.phone = data.donorPhone.replace(/\D/g, "");
+  if (data.ipAddress) payload.customer.ip = data.ipAddress;
+  try {
+    const response = await fetch("https://api.utmify.com.br/api-credentials/orders", {
+      method: "POST",
+      headers: { "x-api-token": API_TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) { const errText = await response.text(); console.warn(`Utmify falhou para status ${data.status}:`, response.status, errText); }
+    else { const respJson = await response.json(); console.log(`Utmify sucesso para status ${data.status}:`, respJson); }
+  } catch (err) { console.error(`Erro ao disparar Utmify (${data.status}):`, err); }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
