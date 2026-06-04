@@ -49,7 +49,7 @@ export const trackInitiateCheckout = (valor: number, txId?: string) => {
       content_id: txId || "doacao-pix-gerado",
       content_name: "Doação Duda - PIX Gerado",
       quantity: 1,
-    });
+    }, txId ? { event_id: txId } : undefined);
   } catch (e) {
     console.warn("TikTok pixel track failed", e);
   }
@@ -69,7 +69,7 @@ export const trackPurchase = (valor: number, txId?: string) => {
       content_id: txId || "doacao-pix",
       content_name: "Doação Duda",
       quantity: 1,
-    });
+    }, txId ? { event_id: txId } : undefined);
   } catch (e) {
     console.warn("TikTok pixel track failed", e);
   }
