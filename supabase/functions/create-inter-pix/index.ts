@@ -424,18 +424,23 @@ Deno.serve(async (req) => {
 
     // Save transaction to database for webhook usage
     const supabaseAdmin = getSupabaseAdmin();
-    await supabaseAdmin.from("pix_transactions").insert({
-      txid,
-      amount: valor,
-      donor_name: body?.donor_name || null,
-      donor_email: body?.donor_email || null,
-      donor_phone: body?.donor_phone || null,
-      ttclid: body?.ttclid || null,
-      url: body?.url || null,
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      status: 'pending'
-    }).catch(err => console.error("Failed to insert pix_transaction:", err));
+    try {
+      const { error: insertError } = await supabaseAdmin.from("pix_transactions").insert({
+        txid,
+        amount: valor,
+        donor_name: body?.donor_name || null,
+        donor_email: body?.donor_email || null,
+        donor_phone: body?.donor_phone || null,
+        ttclid: body?.ttclid || null,
+        url: body?.url || null,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        status: 'pending'
+      });
+      if (insertError) console.error("Failed to insert pix_transaction:", insertError.message);
+    } catch (err) {
+      console.error("Failed to insert pix_transaction:", err);
+    }
 
     // Dispara CAPI: InitiateCheckout
     sendTikTokCapi({
