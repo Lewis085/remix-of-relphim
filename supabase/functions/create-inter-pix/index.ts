@@ -3,6 +3,7 @@
 // DISTRIBUTED LOCK anti-thundering-herd, retry com backoff exponencial + jitter.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendTikTokCapi } from "../_shared/tiktokCapi.ts";
+import { sendUtmifyPostback } from "../_shared/utmify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -378,6 +379,18 @@ Deno.serve(async (req) => {
       userAgent,
       donorEmail: body?.donor_email,
       donorPhone: body?.donor_phone,
+    });
+
+    // Dispara Utmify: PIX Gerado (waiting_payment)
+    sendUtmifyPostback({
+      orderId: txid,
+      status: "waiting_payment",
+      amountInCents: amountCents,
+      donorName: body?.donor_name,
+      donorEmail: body?.donor_email,
+      donorPhone: body?.donor_phone,
+      ipAddress,
+      url: body?.url,
     });
 
     // Dispara notificação em background — nunca bloqueia/atrasa a resposta

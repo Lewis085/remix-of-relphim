@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendTikTokCapi } from "../_shared/tiktokCapi.ts";
+import { sendUtmifyPostback } from "../_shared/utmify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,11 +93,12 @@ Deno.serve(async (req) => {
           .eq("txid", txid);
       }
 
-      // 3. Notify Telegram (and in the future, Utmify)
+      // 3. Notify Telegram
       await notifyTelegramOnce(txid, valor, tx);
       
-      // 4. TikTok CAPI (Purchase)
+      // 4. TikTok CAPI & Utmify (Purchase / Paid)
       if (tx) {
+        // TikTok
         await sendTikTokCapi({
           eventName: "Purchase",
           eventId: txid,
@@ -107,6 +109,19 @@ Deno.serve(async (req) => {
           userAgent: tx.user_agent,
           donorEmail: tx.donor_email,
           donorPhone: tx.donor_phone,
+        });
+
+        // Utmify
+        await sendUtmifyPostback({
+          orderId: txid,
+          status: "paid",
+          amountInCents: Math.round(Number(valor) * 100),
+          donorName: tx.donor_name,
+          donorEmail: tx.donor_email,
+          donorPhone: tx.donor_phone,
+          ipAddress: tx.ip_address,
+          url: tx.url,
+          createdAt: tx.created_at, // Send original creation date if available
         });
       }
     }
