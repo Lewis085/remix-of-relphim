@@ -53,6 +53,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          donor_email: string | null
+          donor_name: string | null
+          donor_phone: string | null
+          ip_address: string | null
+          status: string | null
+          ttclid: string | null
+          txid: string
+          updated_at: string | null
+          url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          donor_email?: string | null
+          donor_name?: string | null
+          donor_phone?: string | null
+          ip_address?: string | null
+          status?: string | null
+          ttclid?: string | null
+          txid: string
+          updated_at?: string | null
+          url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          donor_email?: string | null
+          donor_name?: string | null
+          donor_phone?: string | null
+          ip_address?: string | null
+          status?: string | null
+          ttclid?: string | null
+          txid?: string
+          updated_at?: string | null
+          url?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       tentativas_de_pix: {
         Row: {
           amount_cents: number
