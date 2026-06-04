@@ -19,13 +19,19 @@ function extractUtms(urlStr?: string) {
     
     const fields = ["utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term", "src", "sck"];
     for (const field of fields) {
-      if (params.has(field)) {
-        utms[field] = params.get(field)!;
-      }
+      utms[field] = params.has(field) ? params.get(field)! : null;
     }
     return utms;
   } catch {
-    return {};
+    return {
+      utm_source: null,
+      utm_campaign: null,
+      utm_medium: null,
+      utm_content: null,
+      utm_term: null,
+      src: null,
+      sck: null
+    };
   }
 }
 
@@ -37,13 +43,17 @@ export async function sendUtmifyPostback(data: UtmifyOrderData) {
     platform: "pacientzero",
     paymentMethod: "pix",
     status: data.status,
-    customer: {},
+    customer: {
+      document: null
+    },
     products: [
       {
         id: "doacao-duda",
         name: "Doação Duda",
         quantity: 1,
-        priceInCents: data.amountInCents
+        priceInCents: data.amountInCents,
+        planId: "unico",
+        planName: "Doacao Unica"
       }
     ],
     commission: {
@@ -57,7 +67,9 @@ export async function sendUtmifyPostback(data: UtmifyOrderData) {
 
   // Safe Date formatting (YYYY-MM-DD HH:mm:ss)
   const d = data.createdAt ? new Date(data.createdAt) : new Date();
-  payload.createdAt = d.toISOString().replace("T", " ").substring(0, 19);
+  const dateStr = d.toISOString().replace("T", " ").substring(0, 19);
+  payload.createdAt = dateStr;
+  payload.approvedDate = dateStr;
 
   if (data.donorName) payload.customer.name = data.donorName;
   if (data.donorEmail) payload.customer.email = data.donorEmail.trim().toLowerCase();
