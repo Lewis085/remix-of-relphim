@@ -4,7 +4,7 @@
 declare global {
   interface Window {
     ttq?: {
-      track: (event: string, params?: Record<string, unknown>) => void;
+      track: (event: string, params?: Record<string, unknown>, options?: Record<string, unknown>) => void;
       page: () => void;
       identify?: (params: Record<string, unknown>) => void;
     };
