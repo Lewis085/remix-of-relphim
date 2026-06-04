@@ -32,3 +32,5 @@ Thumbs.db
 *.local
 coverage
 
+# ── Skills (Locais apenas) ───────────────────────────────────
+.agents/
