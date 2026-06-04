@@ -125,7 +125,12 @@ const Checkout = () => {
       const totalCents = Math.round(total * 100);
 
       const { data, error: fnErr } = await supabase.functions.invoke("create-inter-pix", {
-        body: { amount: totalCents },
+        body: { 
+          amount: totalCents,
+          donor_name: `${nome.trim()} ${sobrenome.trim()}`.trim(),
+          donor_email: email.trim(),
+          donor_phone: telefone.replace(/\D/g, "")
+        },
       });
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
 

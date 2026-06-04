@@ -348,6 +348,17 @@ Deno.serve(async (req) => {
 
     const { txid, cob } = await createCob(client, token, cobPayload);
 
+    // Save transaction to database for webhook usage
+    const supabaseAdmin = getSupabaseAdmin();
+    await supabaseAdmin.from("pix_transactions").insert({
+      txid,
+      amount: valor,
+      donor_name: body?.donor_name || null,
+      donor_email: body?.donor_email || null,
+      donor_phone: body?.donor_phone || null,
+      status: 'pending'
+    }).catch(err => console.error("Failed to insert pix_transaction:", err));
+
     // Dispara notificação em background — nunca bloqueia/atrasa a resposta
     notifyPixCreated(txid, valor);
 
