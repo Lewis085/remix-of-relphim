@@ -48,8 +48,8 @@ export async function sendUtmifyPostback(data: UtmifyOrderData) {
     },
     products: [
       {
-        id: "doacao-duda",
-        name: "Doação Duda",
+        id: "oferta-validada",
+        name: "Oferta Validada",
         quantity: 1,
         priceInCents: data.amountInCents,
         planId: "unico",
