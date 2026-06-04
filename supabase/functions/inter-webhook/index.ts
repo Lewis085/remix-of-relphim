@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { sendTikTokCapi } from "../_shared/tiktokCapi.ts";
-import { sendUtmifyPostback } from "../_shared/utmify.ts";
+import { sendTikTokCapi } from "./_shared/tiktokCapi.ts";
+import { sendUtmifyPostback } from "./_shared/utmify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,8 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const TELEGRAM_CHAT_ID = "-1003744353930";
-const TELEGRAM_GATEWAY = "https://connector-gateway.lovable.dev/telegram";
 
 let supabaseAdminSingleton: ReturnType<typeof createClient> | null = null;
 
@@ -22,44 +20,6 @@ function getSupabaseAdmin() {
   return supabaseAdminSingleton;
 }
 
-async function notifyTelegramOnce(txid: string, amount: string | undefined, donorInfo?: any) {
-  try {
-    const sb = getSupabaseAdmin();
-    // Dedup table to ensure we only send once per txid
-    const { error: insErr } = await sb.from("pix_notified").insert({ txid });
-    if (insErr) {
-      // already notified
-      return;
-    }
-
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    const tgKey = Deno.env.get("TELEGRAM_API_KEY");
-    if (!lovableKey || !tgKey) return;
-
-    const valor = amount ? `R$ ${amount}` : "valor não informado";
-    
-    let text = `💙 <b>PIX recebido (Webhook)!</b>\nValor: <b>${valor}</b>\nTXID: <code>${txid}</code>`;
-    if (donorInfo && donorInfo.donor_name) {
-      text += `\nDoador: ${donorInfo.donor_name}`;
-    }
-
-    await fetch(`${TELEGRAM_GATEWAY}/sendMessage`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": tgKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text,
-        parse_mode: "HTML",
-      }),
-    });
-  } catch (e) {
-    console.error("notifyTelegramOnce erro:", e);
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -93,9 +53,7 @@ Deno.serve(async (req) => {
           .eq("txid", txid);
       }
 
-      // 3. Notify Telegram
-      await notifyTelegramOnce(txid, valor, tx);
-      
+
       // 4. TikTok CAPI & Utmify (Purchase / Paid)
       if (tx) {
         // TikTok
