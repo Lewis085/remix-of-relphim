@@ -18,7 +18,7 @@ export const VakinhaLogo = ({ className = "", size = "md" }: CampaignLogoProps) 
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
         <Heart className="h-5 w-5 fill-primary text-primary" />
       </div>
-      <span className={`font-display font-bold tracking-tight ${colorClass}`}>
+      <span className={`font-display font-bold tracking-tight text-foreground ${s.text}`}>
         Ajude a Kerlen
       </span>
     </div>
