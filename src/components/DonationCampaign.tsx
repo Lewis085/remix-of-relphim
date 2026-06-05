@@ -92,7 +92,8 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
         {/* ── Headline ─────────────────────────────────────── */}
         <div className="mb-6">
           <h1 className="max-w-2xl text-3xl sm:text-4xl lg:text-[2.75rem] text-foreground">
-            Apoie a autonomia e<br className="hidden sm:block" />
+            Apoie a autonomia e{" "}
+            <br className="hidden sm:block" />
             inclusão da Kerlen
           </h1>
           <p className="mt-2.5 max-w-lg text-[15px] text-muted-foreground leading-relaxed">

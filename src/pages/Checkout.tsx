@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Crown, Lock, ShieldCheck, Heart, User, Mail, Phone } from "lucide-react";
+import { Check, Crown, Lock, ShieldCheck, Heart, User, Mail, Phone, ArrowLeft } from "lucide-react";
 import { VakinhaLogo } from "@/components/VakinhaLogo";
 import seloSeguranca from "@/assets/selo-seguranca.webp";
 import pixLogo from "@/assets/pix-logo.png";
@@ -9,8 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { trackInitiateCheckout, trackIdentify, getTtclid } from "@/lib/tiktokPixel";
 
 // ── Configuração de preços (psicologia de ancoragem) ──────────
-const PRESETS = [25, 35, 50, 75, 100, 150, 200, 250];
-const BIG_PRESET = 350;
+const PRESETS = [25, 50, 100, 250];
 const POPULAR = 50;
 const MIN = 20;
 const MAX = 2000;
@@ -28,12 +27,7 @@ const IMPACT: Record<number, string> = {
   350: "cadeira adaptada parcial",
 };
 
-// "Turbine" — add-ons com emoji e impacto concreto
-const TURBO = [
-  { id: "mult",  name: "Multiplicar impacto",    value: 10, emoji: "💙", detail: "Chega a mais famílias" },
-  { id: "brinq", name: "Brinquedo solidário",    value: 15, emoji: "🧸", detail: "Para a Kerlen brincar"  },
-  { id: "cesta", name: "Cesta de nutrição",      value: 20, emoji: "🛒", detail: "Alimentação especial" },
-];
+
 
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -82,7 +76,6 @@ const Checkout = () => {
 
   // ── Step 1: Valor ───────────────────────────────────────────
   const [amount, setAmount] = useState(initial || POPULAR);
-  const [extras, setExtras] = useState<string[]>([]);
 
   // ── Step 2: Dados pessoais ──────────────────────────────────
   const [nome, setNome] = useState("");
@@ -95,8 +88,7 @@ const Checkout = () => {
     if (initial > 0) setAmount(initial);
   }, [initial]);
 
-  const extrasTotal = TURBO.filter((t) => extras.includes(t.id)).reduce((s, t) => s + t.value, 0);
-  const total = +(amount + extrasTotal).toFixed(2);
+  const total = amount;
   const valid = total >= MIN && total <= MAX;
 
   const error =
@@ -107,9 +99,6 @@ const Checkout = () => {
     const digits = e.target.value.replace(/\D/g, "");
     setAmount(parseInt(digits || "0", 10) / 100);
   };
-
-  const toggleExtra = (id: string) =>
-    setExtras((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   // ── Step 2 validation ───────────────────────────────────────
   const formValid = nome.trim().length >= 2 && sobrenome.trim().length >= 1 && isValidEmail(email);
@@ -286,19 +275,7 @@ const Checkout = () => {
                 })}
               </div>
 
-              <button
-                onClick={() => setAmount(BIG_PRESET)}
-                className={`mt-3 w-full rounded-xl border-2 px-4 py-3.5 text-base font-extrabold transition-all hover:-translate-y-0.5 ${
-                  amount === BIG_PRESET
-                    ? "border-primary bg-primary text-white shadow-elevated"
-                    : "border-primary/40 bg-primary/5 text-primary hover:border-primary hover:bg-primary/10"
-                }`}
-              >
-                <span className="block">R$ {BIG_PRESET.toLocaleString("pt-BR")},00</span>
-                <span className={`block text-[10px] font-medium ${
-                  amount === BIG_PRESET ? "text-white/80" : "text-primary/70"
-                }`}>{IMPACT[BIG_PRESET]}</span>
-              </button>
+
 
               <div className="mt-3">
                 <label htmlFor="custom-amount" className="mb-1.5 block text-xs font-medium text-muted-foreground">
@@ -342,49 +319,12 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Turbinar doação (add-ons) */}
-            <div className="mt-4 rounded-2xl bg-white p-5 shadow-card">
-              <h2 className="mb-1 text-sm font-bold text-foreground">Turbine sua doação 💙</h2>
-              <p className="mb-4 text-xs text-muted-foreground">Adicione um impacto extra com um clique</p>
-              <div className="grid grid-cols-3 gap-2">
-                {TURBO.map((t) => {
-                  const selected = extras.includes(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => toggleExtra(t.id)}
-                      className={`flex flex-col items-center rounded-xl border-2 p-3 text-center transition-all hover:-translate-y-0.5 ${
-                        selected
-                          ? "border-primary bg-primary text-white shadow-card"
-                          : "border-border bg-white hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-2xl">{t.emoji}</span>
-                      <span className="mt-1 text-[11px] font-bold leading-tight">{t.name}</span>
-                      <span className="mt-0.5 text-[10px] text-current/70">{t.detail}</span>
-                      <span className="mt-1 text-xs font-semibold">+ R$ {formatBRL(t.value)}</span>
-                      {selected && <Check className="mt-1 h-3.5 w-3.5" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+
 
             {/* Resumo + CTA "Continuar" */}
             <div className="mt-4 rounded-2xl bg-white p-5 shadow-card">
               <h2 className="mb-4 text-sm font-bold text-foreground">Resumo</h2>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Doação:</span>
-                  <span>R$ {formatBRL(amount)}</span>
-                </div>
-                {extrasTotal > 0 && (
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Extras:</span>
-                    <span>R$ {formatBRL(extrasTotal)}</span>
-                  </div>
-                )}
-                <div className="my-2 h-px bg-border" />
                 <div className="flex justify-between text-base font-extrabold text-foreground">
                   <span>Total:</span>
                   <span className="text-primary">R$ {formatBRL(total)}</span>
