@@ -12,7 +12,7 @@ import avatar7 from "@/assets/avatar7.webp";
 import { useDonationTotals } from "@/lib/donationStore";
 
 // ── Constantes ─────────────────────────────────────────────────
-const META = 4_000_000;
+const META = 300_000;
 
 const DONATION_TIERS = [
   { value: 25,  label: "R$ 25",  note: "1 sessão de fisioterapia" },
