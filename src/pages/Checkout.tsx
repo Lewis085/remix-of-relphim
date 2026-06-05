@@ -15,10 +15,23 @@ const POPULAR = 50;
 const MIN = 20;
 const MAX = 2000;
 
+// Impacto tangível por valor — ancora a decisão no benefício concreto
+const IMPACT: Record<number, string> = {
+  25:  "1 sessão de fisioterapia",
+  35:  "1 dia de insumos essenciais",
+  50:  "1 semana de insumos",
+  75:  "1 consulta especializada",
+  100: "1 consulta médica",
+  150: "1 mês de terapia ocupacional",
+  200: "kit de adaptação",
+  250: "1 mês de suporte completo",
+  350: "cadeira adaptada parcial",
+};
+
 // "Turbine" — add-ons com emoji e impacto concreto
 const TURBO = [
   { id: "mult",  name: "Multiplicar impacto",    value: 10, emoji: "💙", detail: "Chega a mais famílias" },
-  { id: "brinq", name: "Brinquedo solidário",    value: 15, emoji: "🧸", detail: "Para a Duda brincar"  },
+  { id: "brinq", name: "Brinquedo solidário",    value: 15, emoji: "🧸", detail: "Para a Kerlen brincar"  },
   { id: "cesta", name: "Cesta de nutrição",      value: 20, emoji: "🛒", detail: "Alimentação especial" },
 ];
 
@@ -207,7 +220,7 @@ const Checkout = () => {
           <Heart className="h-8 w-8 flex-shrink-0 fill-primary text-primary" />
           <div>
             <h1 className="text-lg font-bold text-foreground">
-              Você está ajudando a Duda a viver melhor
+              Você está ajudando a Kerlen a viver melhor
             </h1>
             <p className="text-xs text-muted-foreground">
               Campanha #4452341 · Cada centavo chega diretamente ao tratamento
@@ -222,10 +235,21 @@ const Checkout = () => {
             ════════════════════════════════════════════════════════ */}
         {step === 1 && (
           <div className="animate-fade-in-up">
+
+            {/* ── Trust signal no topo ───────────────────────── */}
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3.5">
+              <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+              <p className="text-xs leading-relaxed text-foreground/80">
+                <strong className="text-foreground">100% seguro e verificado.</strong>{" "}
+                Sua doação é gerenciada pelo <strong className="text-foreground">Instituto Impacto Positivo</strong> e repassada integralmente à família da Kerlen.
+                Doação única — nenhuma cobrança futura.
+              </p>
+            </div>
+
             {/* Seleção de valor */}
             <div className="rounded-2xl bg-white p-5 shadow-card">
               <h2 className="mb-1 text-sm font-bold text-foreground">Escolha o valor da sua doação</h2>
-              <p className="mb-4 text-xs text-muted-foreground">Qualquer valor já faz diferença para a Duda</p>
+              <p className="mb-4 text-xs text-muted-foreground">Cada valor tem um impacto direto na vida da Kerlen</p>
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-4">
                 {PRESETS.map((p) => {
@@ -240,7 +264,7 @@ const Checkout = () => {
                       )}
                       <button
                         onClick={() => setAmount(p)}
-                        className={`w-full rounded-xl border-2 px-3 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 ${
+                        className={`w-full rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all hover:-translate-y-0.5 ${
                           isSelected
                             ? "border-primary bg-primary text-white shadow-elevated"
                             : isPopular
@@ -248,7 +272,14 @@ const Checkout = () => {
                               : "border-border bg-white text-foreground hover:border-primary/50"
                         }`}
                       >
-                        R$ {p.toLocaleString("pt-BR")},00
+                        <span className="block">R$ {p.toLocaleString("pt-BR")},00</span>
+                        {IMPACT[p] && (
+                          <span className={`mt-0.5 block text-[9px] font-medium leading-tight ${
+                            isSelected ? "text-white/80" : "text-muted-foreground"
+                          }`}>
+                            {IMPACT[p]}
+                          </span>
+                        )}
                       </button>
                     </div>
                   );
@@ -263,7 +294,10 @@ const Checkout = () => {
                     : "border-primary/40 bg-primary/5 text-primary hover:border-primary hover:bg-primary/10"
                 }`}
               >
-                R$ {BIG_PRESET.toLocaleString("pt-BR")},00
+                <span className="block">R$ {BIG_PRESET.toLocaleString("pt-BR")},00</span>
+                <span className={`block text-[10px] font-medium ${
+                  amount === BIG_PRESET ? "text-white/80" : "text-primary/70"
+                }`}>{IMPACT[BIG_PRESET]}</span>
               </button>
 
               <div className="mt-3">
@@ -363,18 +397,13 @@ const Checkout = () => {
                 className="btn-primary mt-5 w-full py-4 text-base"
                 id="checkout-continue"
               >
-                <ArrowRight className="h-5 w-5" />
-                Continuar · R$ {formatBRL(total)}
+                <Heart className="h-5 w-5 fill-white" />
+                Ajudar a Kerlen com R$ {formatBRL(total)}
               </button>
 
-              <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Dados protegidos
-                </span>
-                <span className="flex items-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-primary" /> PIX seguro
-                </span>
-              </div>
+              <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
+                Doação única · Nenhuma cobrança futura · PIX seguro
+              </p>
             </div>
           </div>
         )}
@@ -495,7 +524,8 @@ const Checkout = () => {
               <img src={seloSeguranca} alt="Selo de segurança" className="h-12 flex-shrink-0 object-contain" />
               <p className="text-xs text-muted-foreground">
                 Garantimos uma <strong>experiência 100% segura</strong>. Sua doação chega diretamente
-                para a família da Duda, sem intermediários.
+                gerenciada pelo Instituto Impacto Positivo e repassada
+                integralmente à família da Kerlen.
               </p>
             </div>
 
@@ -512,12 +542,15 @@ const Checkout = () => {
               <img src={seloSeguranca} alt="Selo de segurança" className="h-12 flex-shrink-0 object-contain" />
               <p className="text-xs text-muted-foreground">
                 Garantimos uma <strong>experiência 100% segura</strong>. Sua doação chega diretamente
-                para a família da Duda, sem intermediários.
+                gerenciada pelo Instituto Impacto Positivo e repassada
+                integralmente à família da Kerlen.
               </p>
             </div>
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
-              Após a confirmação do PIX, você receberá um comprovante. Obrigado por ajudar a Duda! 💙
-            </p>
+            <div className="mt-4 rounded-md border border-border/50 bg-primary/5 p-4 text-center">
+              <p className="text-[13px] font-medium text-foreground/90">
+                Após a confirmação do PIX, você receberá um comprovante. Obrigado por ajudar a Kerlen! 💙
+              </p>
+            </div>
           </>
         )}
       </main>

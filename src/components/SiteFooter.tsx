@@ -7,12 +7,13 @@ export const SiteFooter = () => {
       {/* Bloco final emocional — sem repetir CTA agressivo */}
       <div className="bg-primary py-12 text-center text-white">
         <p className="font-display text-2xl sm:text-3xl">
-          Cada gesto de solidariedade<br />
-          sustenta a vida da Duda.
+          100% do valor arrecadado é gerenciado pelo Instituto Impacto Positivo
+          e repassado integralmente à família da Kerlen.
         </p>
         <p className="mx-auto mt-3 max-w-md text-sm text-white/70 leading-relaxed">
-          Doe qualquer valor via PIX — rápido, seguro, sem cadastro.
-          Ou compartilhe esta página e ajude a Duda a alcançar mais pessoas.
+          Você tem dúvidas? Fale com a equipe responsável pela campanha.
+          <br className="hidden sm:block" />
+          Ou compartilhe esta página e ajude a Kerlen a alcançar mais pessoas.
         </p>
         <a
           href="#doe-agora"

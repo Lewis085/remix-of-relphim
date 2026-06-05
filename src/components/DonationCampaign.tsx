@@ -1,5 +1,5 @@
 import { Heart, CheckCircle2, MessageCircle, ShieldCheck, Users, Clock, Share2 } from "lucide-react";
-import bannerCeleste from "@/assets/banner-celeste.jpg";
+import bannerCeleste from "@/assets/kerlen.jpg";
 import institutoLogo from "@/assets/instituto-logo.webp";
 import seloSeguranca from "@/assets/selo-seguranca.webp";
 import avatar1 from "@/assets/avatar1.jpg";
@@ -50,7 +50,7 @@ const COMENTARIOS: Comentario[] = [
     name: "Maria Eduarda",
     avatar: avatar3,
     time: "7 min",
-    text: "Cada doação importa. Duda merece nosso apoio!",
+    text: "Cada doação importa. Kerlen merece nosso apoio!",
   },
   {
     name: "Laura Sofia",
@@ -92,12 +92,12 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
         {/* ── Headline ─────────────────────────────────────── */}
         <div className="mb-6">
           <h1 className="max-w-2xl text-3xl sm:text-4xl lg:text-[2.75rem] text-foreground">
-            Ajude a Duda a vencer<br className="hidden sm:block" />
-            a AME Tipo 1
+            Apoie a autonomia e<br className="hidden sm:block" />
+            inclusão da Kerlen
           </h1>
           <p className="mt-2.5 max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Duda tem 1 ano e precisa de tratamento contínuo para sobreviver.
-            Cada contribuição garante mais um dia de cuidado e esperança.
+            Kerlen nasceu com agenesia de membros e precisa de acompanhamento contínuo e adaptações.
+            Sua contribuição ajuda a garantir um futuro com autonomia, conforto e inclusão.
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
             <div className="overflow-hidden rounded-xl">
               <img
                 src={bannerCeleste}
-                alt="Pequena Duda — bebê com AME Tipo 1"
+                alt="Kerlen — em busca de autonomia"
                 className="h-auto w-full object-cover"
                 width={1280}
                 height={768}
@@ -135,7 +135,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
                 </span>
               </div>
               <button
-                onClick={() => navigator.share?.({ title: "Ajude a Duda!", url: window.location.href })}
+                onClick={() => navigator.share?.({ title: "Ajude a Kerlen!", url: window.location.href })}
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                 id="share-btn"
               >
@@ -167,7 +167,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
 
             {/* Tabs */}
             <div className="mt-10 flex gap-6 border-b border-border/60">
-              {["Sobre a Duda", "Novidades", "Quem ajudou"].map((t, i) => (
+              {["Sobre a Kerlen", "Novidades", "Quem ajudou"].map((t, i) => (
                 <button
                   key={t}
                   className={`pb-2.5 text-sm font-medium transition-colors ${
@@ -189,48 +189,44 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
               </p>
 
               <p>
-                Olá! Sou do Rio de Janeiro, a mãe da <strong>Duda Motta</strong>, de apenas
-                1 ano, que enfrenta um diagnóstico devastador:{" "}
-                <strong>Atrofia Muscular Espinhal (AME) Tipo 1</strong>. Essa condição genética
-                compromete os movimentos, a respiração e a deglutição. Sem suporte adequado,
-                pode ser fatal antes dos dois anos de vida.
+                A <strong>Kerlen</strong> é uma menina linda que nasceu com agenesia de membros 
+                (ausência parcial ou total dos membros). Ela tem um potencial incrível de adaptação, mas 
+                precisa de muito apoio para conquistar sua autonomia, conforto e inclusão.
               </p>
 
-              {/* Urgência — editorial, não alarme */}
               <aside className="border-l-[3px] border-accent/70 bg-accent/5 py-3 pl-4 pr-4 rounded-r-lg">
                 <p className="text-sm font-semibold text-accent flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                  Por que agora?
+                  Quais são os desafios?
                 </p>
                 <p className="mt-1 text-sm text-foreground/80">
-                  A janela terapêutica da Duda é pequena. Cada dia sem os equipamentos e terapias
-                  corretos compromete irreversivelmente o desenvolvimento das suas funções vitais.
+                  As necessidades dela envolvem terapias constantes, equipamentos adaptados e modificações residenciais,
+                  que têm um custo financeiro bastante elevado.
                 </p>
               </aside>
 
               <p>
-                <strong>O que é AME?</strong> Uma condição genética rara que destrói os neurônios
-                motores. Eles controlam respiração, movimento e deglutição. Quando morrem, não voltam.
-                A expectativa de vida sem suporte é inferior a 2 anos.
+                O desenvolvimento físico e motor da Kerlen exige uma equipe multidisciplinar trabalhando em conjunto:
+                <strong> Fisioterapia</strong> (para fortalecer o tronco e pescoço), 
+                <strong> Terapia Ocupacional</strong> (para autonomia diária e interações) e 
+                <strong> Ortopedia/Fisiatria</strong> (para acompanhar o crescimento ósseo e a viabilidade de próteses).
               </p>
 
               <p>
-                Estamos lutando pelo medicamento <strong>ZOLGENSMA</strong> — que custa cerca de
-                7 milhões de reais — mas nossa prioridade imediata é garantir todos os cuidados
-                de suporte que mantêm a Duda estável e com qualidade de vida.
+                Além disso, o ambiente ao redor dela precisa se adaptar, com mobilidade especializada (carrinhos adaptados ou cadeiras sob medida), 
+                roupas fáceis de vestir e tecnologia assistiva para o dia a dia.
               </p>
 
-              {/* Lista de impacto */}
               <div className="rounded-lg border border-border/60 p-5">
                 <p className="mb-3 text-sm font-semibold text-foreground">
                   Como sua doação vai ajudar:
                 </p>
                 <ul className="space-y-2.5 text-sm">
                   {[
-                    { item: "Equipamentos respiratórios",   detail: "BiPAP, insumos e acessórios" },
-                    { item: "Terapia contínua",             detail: "Fisioterapia e fonoaudiologia" },
-                    { item: "Insumos especiais",            detail: "Colchão pneumático, cadeira adaptada" },
-                    { item: "Transporte médico",            detail: "Consultas e sessões de terapia" },
+                    { item: "Acompanhamento Multidisciplinar", detail: "Fisioterapia, Terapia Ocupacional e Ortopedia" },
+                    { item: "Adaptações Físicas",             detail: "Cadeiras e assentos posturais sob medida" },
+                    { item: "Apoio Psicológico",              detail: "Apoio terapêutico para a Kerlen e sua família" },
+                    { item: "Inclusão Escolar",               detail: "Materiais adaptados e cuidadores" },
                   ].map(({ item, detail }) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
@@ -240,10 +236,9 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
                 </ul>
               </div>
 
-              {/* CTA emocional */}
               <div id="doe-agora" className="pt-1">
                 <button onClick={onDonateClick} className="btn-primary w-full py-4 text-[15px]" id="mid-cta">
-                  Quero ajudar a Duda
+                  Quero ajudar a Kerlen
                 </button>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Doação segura via PIX · Qualquer valor
@@ -251,23 +246,22 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
               </div>
 
               <p>
-                O custo diário de todos esses cuidados ultrapassa o que nossa família consegue
-                arcar sozinha. Sem esse suporte, perdemos tempo precioso na busca pela
-                estabilidade dela.
+                As necessidades da Kerlen têm um custo financeiro bastante elevado, sendo um dos maiores desafios 
+                para a família. O apoio de cada um é essencial.
               </p>
 
               <p>
                 <strong>Como você pode fazer a diferença:</strong>
               </p>
               <ul className="space-y-1 text-sm pl-1">
-                <li className="flex gap-2"><span className="text-primary">·</span> Doe qualquer valor — cada contribuição mantém a Duda respirando com mais segurança.</li>
+                <li className="flex gap-2"><span className="text-primary">·</span> Doe qualquer valor — cada contribuição ajuda no desenvolvimento dela.</li>
                 <li className="flex gap-2"><span className="text-primary">·</span> Compartilhe em suas redes, grupos de amigos e familiares.</li>
-                <li className="flex gap-2"><span className="text-primary">·</span> Conecte-nos a influenciadores ou empresas que possam ampliar nossa voz.</li>
+                <li className="flex gap-2"><span className="text-primary">·</span> Envie mensagens de apoio.</li>
               </ul>
 
               <p>
-                Juntos, podemos oferecer à Duda o conforto e o suporte que ela merece.
-                A vida da Duda está em nossas mãos — contamos com você.
+                Juntos, podemos oferecer à Kerlen o conforto e o suporte que ela merece.
+                A autonomia da Kerlen está em nossas mãos — contamos com você.
               </p>
 
               <button onClick={onDonateClick} className="btn-primary w-full py-4 text-[15px]" id="bottom-article-cta">

@@ -14,10 +14,12 @@ export const VakinhaLogo = ({ className = "", size = "md" }: CampaignLogoProps) 
   const s = sizes[size];
 
   return (
-    <div className={`flex items-center gap-2 ${className}`} aria-label="Campanha Duda AME">
-      <Heart className={`${s.icon} text-primary`} />
-      <span className={`font-display ${s.text} text-foreground`}>
-        Ajude a Duda
+    <div className={`flex items-center gap-2 ${className}`} aria-label="Campanha Kerlen AME">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+        <Heart className="h-5 w-5 fill-primary text-primary" />
+      </div>
+      <span className={`font-display font-bold tracking-tight ${colorClass}`}>
+        Ajude a Kerlen
       </span>
     </div>
   );

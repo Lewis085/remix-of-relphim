@@ -136,16 +136,16 @@ const Pix = () => {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sua doação de <strong className="text-primary">R$ {formatBRL(valor)}</strong> foi
-            recebida. A família da Duda agradece de coração! 💙
+            recebida. A família da Kerlen agradece de coração! 💙
           </p>
           <div className="mt-6 rounded-xl bg-primary/5 border border-primary/20 p-4 text-sm text-foreground">
             <Heart className="mx-auto mb-2 h-6 w-6 fill-primary text-primary" />
-            Você fez parte da história da Duda.
+            Você fez parte da história da Kerlen.
             Compartilhe e inspire mais pessoas.
           </div>
           <button
             onClick={() => {
-              navigator.share?.({ title: "Eu ajudei a Duda!", url: window.location.origin });
+              navigator.share?.({ title: "Eu ajudei a Kerlen!", url: window.location.origin });
             }}
             className="btn-primary mt-5 w-full"
             id="pix-share-btn"

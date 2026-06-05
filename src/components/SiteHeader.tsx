@@ -15,10 +15,12 @@ export const SiteHeader = () => {
       <div className="border-b border-border/60 bg-white/98 backdrop-blur-sm">
         <div className="container flex h-12 items-center justify-between">
           {/* Identidade */}
-          <a href="/" className="flex items-center gap-2" aria-label="Campanha Duda">
-            <Heart className="h-5 w-5 text-primary" />
-            <span className="font-display text-lg text-foreground">
-              Ajude a Duda
+          <a href="/" className="flex items-center gap-2" aria-label="Campanha Kerlen">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
+              <Heart className="h-5 w-5 fill-primary text-primary" />
+            </div>
+            <span className="font-display text-[1.35rem] font-bold tracking-tight text-foreground">
+              Ajude a Kerlen
             </span>
           </a>
 

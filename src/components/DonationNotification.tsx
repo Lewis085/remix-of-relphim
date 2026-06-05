@@ -3,7 +3,7 @@ import { addDonation } from "@/lib/donationStore";
 import notifAvatar from "@/assets/notif-avatar.webp";
 
 // ── Tipos de notificação ───────────────────────────────────────
-type NotifType = "donation" | "milestone" | "share";
+type NotifType = "donation";
 
 interface Notif {
   id: number;
@@ -12,7 +12,6 @@ interface Notif {
   amount?: number;
   avatar: string;
   emoji?: string;
-  message?: string;
 }
 
 // ── Dados realistas ────────────────────────────────────────────
@@ -31,22 +30,6 @@ const AMOUNTS = [25, 30, 50, 50, 50, 75, 100, 100, 150, 200, 250, 500];
 // Avatares emoji como fallback — nunca quebra no UI
 const AVATAR_EMOJIS = ["👩", "👨", "👩‍🦱", "👨‍🦳", "👩‍🦰", "🧑", "👴", "👵", "🧑‍🦱", "🧔"];
 
-// Mensagens de compartilhamento — geram FOMO social
-const SHARE_MESSAGES = [
-  "compartilhou essa campanha no WhatsApp",
-  "enviou para a família toda",
-  "compartilhou no Instagram",
-  "indicou para os amigos",
-];
-
-// Marcos de campanha — urgência positiva
-const MILESTONES = [
-  { threshold: 190_000,  message: "🎉 R$ 190.000 arrecadados! A Duda agradece cada coração." },
-  { threshold: 200_000,  message: "🏆 R$ 200.000! Vocês são incríveis. Ajudem mais!" },
-  { threshold: 210_000,  message: "💙 Mais de R$ 210.000! A meta está cada vez mais próxima." },
-  { threshold: 250_000,  message: "🌟 R$ 250.000 arrecadados! A Duda está mais forte com vocês." },
-  { threshold: 300_000,  message: "🚀 R$ 300.000! A família da Duda não tem palavras para agradecer." },
-];
 
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 const formatBRL = (n: number) =>
@@ -54,25 +37,8 @@ const formatBRL = (n: number) =>
 
 // Trava global: evita contar a mesma doação 2x em StrictMode / hot-reload
 const countedIds = new Set<number>();
-const shownMilestones = new Set<number>();
 let nextId = 1;
 
-// ── Confetti calibrado para a nova paleta azul ────────────────
-const fireConfetti = async (big = false) => {
-  try {
-    const { default: confetti } = await import("canvas-confetti");
-    const colors = ["#1A7FE8", "#38bdf8", "#fbbf24", "#ffffff", "#60efff"];
-    confetti({
-      particleCount: big ? 120 : 55,
-      spread:        big ? 90  : 65,
-      origin:        { x: 0.12, y: 0.88 },
-      colors,
-      startVelocity: big ? 55  : 35,
-      gravity:       0.85,
-      scalar:        0.9,
-    });
-  } catch { /* confetti is non-critical */ }
-};
 
 // ══════════════════════════════════════════════════════════════
 //  COMPONENTE
@@ -111,9 +77,6 @@ export const DonationNotification = () => {
 
       requestAnimationFrame(() => setVisible(true));
 
-      // Confetti apenas em doações e marcos
-      if (n.type === "donation")  fireConfetti(false);
-      if (n.type === "milestone") fireConfetti(true);
 
       // Exibe por 5s, depois some
       hideTimerRef.current = setTimeout(dismiss, 5000);
@@ -128,33 +91,8 @@ export const DonationNotification = () => {
       emoji:  pick(AVATAR_EMOJIS),
     });
 
-    const buildShare = (): Notif => ({
-      id:      nextId++,
-      type:    "share",
-      name:    pick(NAMES),
-      avatar:  notifAvatar,
-      emoji:   pick(AVATAR_EMOJIS),
-      message: pick(SHARE_MESSAGES),
-    });
-
-    // Decide o que mostrar: 70% doação, 20% share, 10% marco
+    // Decide o que mostrar: apenas doação
     const scheduleNext = () => {
-      const roll = Math.random();
-      if (roll < 0.70) return show(buildDonation());
-      if (roll < 0.90) return show(buildShare());
-      // Marco: pega o primeiro não mostrado ainda
-      const pending = MILESTONES.find((m) => !shownMilestones.has(m.threshold));
-      if (pending) {
-        shownMilestones.add(pending.threshold);
-        return show({
-          id:      nextId++,
-          type:    "milestone",
-          name:    "Marco alcançado!",
-          avatar:  notifAvatar,
-          emoji:   "🎉",
-          message: pending.message,
-        });
-      }
       return show(buildDonation());
     };
 
@@ -214,27 +152,12 @@ export const DonationNotification = () => {
             <>
               <p className="font-semibold text-foreground">{notif.name}</p>
               <p className="text-muted-foreground">
-                ajudou a Duda com{" "}
+                ajudou a Kerlen com{" "}
                 <strong className="text-primary">
                   R$&nbsp;{formatBRL(notif.amount!)}
                 </strong>
               </p>
             </>
-          )}
-
-          {notif.type === "share" && (
-            <>
-              <p className="font-semibold text-foreground">{notif.name}</p>
-              <p className="text-muted-foreground">
-                {notif.message}
-              </p>
-            </>
-          )}
-
-          {notif.type === "milestone" && (
-            <p className="font-semibold text-foreground leading-tight">
-              {notif.message}
-            </p>
           )}
 
           {/* Timestamp "ao vivo" */}

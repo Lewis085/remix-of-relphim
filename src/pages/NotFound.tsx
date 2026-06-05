@@ -20,7 +20,7 @@ const NotFound = () => {
         <h1 className="mt-4 font-display text-5xl font-bold text-foreground">404</h1>
         <p className="mt-2 text-lg font-semibold text-foreground">Página não encontrada</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Mas a Duda ainda precisa do seu apoio. Volte à campanha!
+          Mas a Kerlen ainda precisa do seu apoio. Volte à campanha!
         </p>
 
         <button

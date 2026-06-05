@@ -25,7 +25,7 @@ export const trackViewContent = () => {
   try {
     window.ttq.track("ViewContent", {
       content_type: "product",
-      content_name: "Doação Duda - Landing Page",
+      content_name: "Doação Kerlen - Landing Page",
     });
   } catch (e) {
     console.warn("TikTok pixel track failed", e);
@@ -55,7 +55,7 @@ export const trackInitiateCheckout = (valor: number, txId?: string) => {
       currency: "BRL",
       content_type: "product",
       content_id: txId || "doacao-pix-gerado",
-      content_name: "Doação Duda - PIX Gerado",
+      content_name: "Doação Kerlen - PIX Gerado",
       quantity: 1,
     }, txId ? { event_id: txId } : undefined);
   } catch (e) {
@@ -75,7 +75,7 @@ export const trackPurchase = (valor: number, txId?: string) => {
       currency: "BRL",
       content_type: "product",
       content_id: txId || "doacao-pix",
-      content_name: "Doação Duda",
+      content_name: "Doação Kerlen",
       quantity: 1,
     }, txId ? { event_id: txId } : undefined);
   } catch (e) {
