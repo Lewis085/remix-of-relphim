@@ -1,5 +1,5 @@
 // Helper para disparar eventos do TikTok Pixel.
-// O script é carregado em index.html (sdkid: D7OECCJC77U471PH1560).
+// O script é carregado em index.html (sdkid: D8HOVS3C77U6KT5C1000).
 
 declare global {
   interface Window {

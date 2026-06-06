@@ -21,8 +21,8 @@ interface TikTokCapiData {
 }
 
 async function sendTikTokCapi(data: TikTokCapiData) {
-  const TIKTOK_PIXEL_ID = "D7OECCJC77U471PH1560";
-  const TIKTOK_ACCESS_TOKEN = "9f18d5319ffbf9ed7a31f633beff728e8dd90986";
+  const TIKTOK_PIXEL_ID = "D8HOVS3C77U6KT5C1000";
+  const TIKTOK_ACCESS_TOKEN = "ef8267a9f6256bd058e717d21385988cf3163d63";
   const payload: any = {
     pixel_code: TIKTOK_PIXEL_ID,
     event: data.eventName,
