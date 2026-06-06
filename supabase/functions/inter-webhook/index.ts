@@ -35,7 +35,7 @@ async function sendTikTokCapi(data: TikTokCapiData) {
       }
     },
     properties: {
-      contents: [{ price: Number(data.amount), quantity: 1, content_id: data.eventId, content_type: "product", content_name: "Oferta Validada" }],
+      contents: [{ price: Number(data.amount), quantity: 1, content_id: "doacao-kerlen", content_type: "product", content_name: "Doação Kerlen" }],
       value: Number(data.amount),
       currency: "BRL"
     }
