@@ -47,6 +47,7 @@ const Pix = () => {
 
   const [pix, setPix]         = useState<PixData | null>(null);
   const [copied, setCopied]   = useState(false);
+  const [hasCopied, setHasCopied] = useState(false);
   const [restante, setRestante] = useState(EXPIRA_EM_SEGUNDOS);
   const [paid, setPaid]       = useState(false);
   const trackedRef             = useRef(false);
@@ -112,6 +113,7 @@ const Pix = () => {
     try {
       await navigator.clipboard.writeText(pix.qr_code);
       setCopied(true);
+      setHasCopied(true);
       toast({ title: "Código PIX copiado! 🎉", description: "Cole no app do seu banco para finalizar." });
       setTimeout(() => setCopied(false), 2500);
     } catch {
@@ -280,6 +282,17 @@ const Pix = () => {
                 <><Copy className="h-4 w-4" /> Copiar código PIX</>
               )}
             </button>
+            
+            {hasCopied && (
+              <div className="mt-2 grid grid-cols-2 gap-2 animate-fade-in-up">
+                <a href="nubank://pix" className="flex items-center justify-center gap-1.5 rounded-xl bg-[#8A05BE]/10 border border-[#8A05BE]/20 py-2.5 text-xs font-bold text-[#8A05BE] transition-colors hover:bg-[#8A05BE]/20">
+                  Abrir Nubank
+                </a>
+                <a href="inter://pix" className="flex items-center justify-center gap-1.5 rounded-xl bg-[#FF7A00]/10 border border-[#FF7A00]/20 py-2.5 text-xs font-bold text-[#FF7A00] transition-colors hover:bg-[#FF7A00]/20">
+                  Abrir Inter
+                </a>
+              </div>
+            )}
           </div>
 
           {/* ── Instruções passo a passo ─────────────────────── */}

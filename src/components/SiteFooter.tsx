@@ -25,14 +25,20 @@ export const SiteFooter = () => {
       </div>
 
       {/* Legal — mínimo, discreto */}
-      <div className="bg-background py-4">
-        <div className="container text-center text-[11px] text-muted-foreground leading-relaxed">
+      <div 
+        className="bg-background py-4"
+        style={{ paddingBottom: "calc(1rem + 5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="container text-center text-[11px] text-muted-foreground leading-relaxed lg:pb-0">
           <p>
             O conteúdo desta campanha é de responsabilidade da família organizadora.
             Doações processadas com segurança via PIX institucional.
           </p>
+          <p className="mt-1 select-none pointer-events-none opacity-80 font-medium">
+            Impacto Positivo — CNPJ: 49.190.870/0001-60
+          </p>
           <p className="mt-1 flex items-center justify-center gap-1 opacity-60">
-            <Heart className="h-2.5 w-2.5" /> 2025
+            <Heart className="h-2.5 w-2.5" /> 2026
           </p>
         </div>
       </div>

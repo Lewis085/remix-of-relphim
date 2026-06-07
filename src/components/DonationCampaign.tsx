@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Heart, CheckCircle2, MessageCircle, ShieldCheck, Users, Clock, Share2 } from "lucide-react";
 import bannerCeleste from "@/assets/kerlen.jpg";
 import institutoLogo from "@/assets/instituto-logo.webp";
@@ -58,9 +59,9 @@ const COMENTARIOS: Comentario[] = [
     time: "9 min",
     text: "Muito triste gente! Compartilhei com minha família toda.",
     respostas: [
-      { name: "Letícia Maria",     avatar: avatar5, time: "14 min", amount: "R$ 50",  text: "Aqui eu ajudei com 50 reais, queria poder doar um pouco mais" },
-      { name: "Gabriela Oliveira", avatar: avatar6, time: "6 min",  text: "Vamos apoiar essa família!" },
-      { name: "Renato Silva",      avatar: avatar7, time: "1 min",  amount: "R$ 300", text: "Doei 300 reais, espero que ajude no tratamento dessa criança." },
+      { name: "Alana Santos",     avatar: avatar5, time: "14 min", amount: "R$ 50",  text: "Aqui eu ajudei com 50 reais, queria poder doar um pouco mais" },
+      { name: "Karla Castro", avatar: avatar6, time: "6 min",  text: "Vamos apoiar essa família!" },
+      { name: "Lucas Orlandi",      avatar: avatar7, time: "1 min",  amount: "R$ 300", text: "Doei 300 reais, espero que ajude no tratamento dessa criança." },
     ],
   },
 ];
@@ -74,6 +75,7 @@ interface Props {
 
 // ══════════════════════════════════════════════════════════════
 export const DonationCampaign = ({ onDonateClick }: Props) => {
+  const [activeTab, setActiveTab] = useState<"sobre" | "agenesia">("sobre");
   const { arrecadado, apoiadores } = useDonationTotals();
   const pct = Math.min(100, (arrecadado / META) * 100);
 
@@ -91,14 +93,12 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
 
         {/* ── Headline ─────────────────────────────────────── */}
         <div className="mb-6">
-          <h1 className="max-w-2xl text-3xl sm:text-4xl lg:text-[2.75rem] text-foreground">
-            Apoie a autonomia e{" "}
-            <br className="hidden sm:block" />
-            inclusão da Kerlen
+          <h1 className="max-w-2xl text-[2rem] sm:text-4xl lg:text-[2.75rem] font-bold text-foreground leading-tight tracking-tight">
+            Kerlen nasceu sem os bracinhos e pernas. <br className="hidden sm:block" />
+            <span className="text-primary">E ela precisa da sua ajuda hoje.</span>
           </h1>
-          <p className="mt-2.5 max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Kerlen nasceu com agenesia de membros e precisa de acompanhamento contínuo e adaptações.
-            Sua contribuição ajuda a garantir um futuro com autonomia, conforto e inclusão.
+          <p className="mt-3.5 max-w-lg text-[16px] text-foreground/80 leading-relaxed">
+            Ela tem uma força incrível para viver, mas os custos com terapias e adaptações sob medida são altíssimos. <strong>Sua doação garante que a Kerlen tenha uma infância com autonomia e inclusão.</strong>
           </p>
         </div>
 
@@ -167,77 +167,105 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
             </div>
 
             {/* Tabs */}
-            <div className="mt-10 flex gap-6 border-b border-border/60">
-              {["Sobre a Kerlen", "Novidades", "Quem ajudou"].map((t, i) => (
-                <button
-                  key={t}
-                  className={`pb-2.5 text-sm font-medium transition-colors ${
-                    i === 0
-                      ? "border-b-2 border-foreground text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="mt-10 flex gap-6 border-b border-border/60 overflow-x-auto no-scrollbar">
+              <button
+                onClick={() => setActiveTab("sobre")}
+                className={`whitespace-nowrap pb-2.5 text-sm font-medium transition-colors ${
+                  activeTab === "sobre"
+                    ? "border-b-2 border-foreground text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sobre a Kerlen
+              </button>
+              <button
+                onClick={() => setActiveTab("agenesia")}
+                className={`whitespace-nowrap pb-2.5 text-sm font-medium transition-colors ${
+                  activeTab === "agenesia"
+                    ? "border-b-2 border-foreground text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                O que é Agenesia?
+              </button>
+              <button
+                onClick={() => document.getElementById('comentarios')?.scrollIntoView({behavior: 'smooth', block: 'start'})}
+                className="whitespace-nowrap pb-2.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+              >
+                Quem ajudou
+              </button>
             </div>
 
             {/* ── História ──────────────────────────────────── */}
             <article className="mt-8 space-y-5 text-[15px] leading-[1.75] text-foreground/85">
-              <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                História verificada pela equipe da campanha
-              </p>
+              {activeTab === "sobre" ? (
+                <div className="animate-fade-in-up space-y-5">
+                  <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                    História verificada pela equipe da campanha
+                  </p>
 
-              <p>
-                A <strong>Kerlen</strong> é uma menina linda que nasceu com agenesia de membros 
-                (ausência parcial ou total dos membros). Ela tem um potencial incrível de adaptação, mas 
-                precisa de muito apoio para conquistar sua autonomia, conforto e inclusão.
-              </p>
+                  <p>
+                    A <strong>Kerlen</strong> é uma menina linda que nasceu com agenesia de membros 
+                    (ausência parcial ou total dos membros). Ela tem um potencial incrível de adaptação, mas 
+                    precisa de muito apoio para conquistar sua autonomia, conforto e inclusão.
+                  </p>
 
-              <aside className="border-l-[3px] border-accent/70 bg-accent/5 py-3 pl-4 pr-4 rounded-r-lg">
-                <p className="text-sm font-semibold text-accent flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                  Quais são os desafios?
-                </p>
-                <p className="mt-1 text-sm text-foreground/80">
-                  As necessidades dela envolvem terapias constantes, equipamentos adaptados e modificações residenciais,
-                  que têm um custo financeiro bastante elevado.
-                </p>
-              </aside>
+                  <aside className="border-l-[3px] border-accent/70 bg-accent/5 py-3 pl-4 pr-4 rounded-r-lg">
+                    <p className="text-sm font-semibold text-accent flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                      Quais são os desafios?
+                    </p>
+                    <p className="mt-1 text-sm text-foreground/80">
+                      As necessidades dela envolvem terapias constantes, equipamentos adaptados e modificações residenciais,
+                      que têm um custo financeiro bastante elevado.
+                    </p>
+                  </aside>
 
-              <p>
-                O desenvolvimento físico e motor da Kerlen exige uma equipe multidisciplinar trabalhando em conjunto:
-                <strong> Fisioterapia</strong> (para fortalecer o tronco e pescoço), 
-                <strong> Terapia Ocupacional</strong> (para autonomia diária e interações) e 
-                <strong> Ortopedia/Fisiatria</strong> (para acompanhar o crescimento ósseo e a viabilidade de próteses).
-              </p>
+                  <p>
+                    O desenvolvimento físico e motor da Kerlen exige uma equipe multidisciplinar trabalhando em conjunto:
+                    <strong> Fisioterapia</strong> (para fortalecer o tronco e pescoço), 
+                    <strong> Terapia Ocupacional</strong> (para autonomia diária e interações) e 
+                    <strong> Ortopedia/Fisiatria</strong> (para acompanhar o crescimento ósseo e a viabilidade de próteses).
+                  </p>
 
-              <p>
-                Além disso, o ambiente ao redor dela precisa se adaptar, com mobilidade especializada (carrinhos adaptados ou cadeiras sob medida), 
-                roupas fáceis de vestir e tecnologia assistiva para o dia a dia.
-              </p>
+                  <p>
+                    Além disso, o ambiente ao redor dela precisa se adaptar, com mobilidade especializada (carrinhos adaptados ou cadeiras sob medida), 
+                    roupas fáceis de vestir e tecnologia assistiva para o dia a dia.
+                  </p>
 
-              <div className="rounded-lg border border-border/60 p-5">
-                <p className="mb-3 text-sm font-semibold text-foreground">
-                  Como sua doação vai ajudar:
-                </p>
-                <ul className="space-y-2.5 text-sm">
-                  {[
-                    { item: "Acompanhamento Multidisciplinar", detail: "Fisioterapia, Terapia Ocupacional e Ortopedia" },
-                    { item: "Adaptações Físicas",             detail: "Cadeiras e assentos posturais sob medida" },
-                    { item: "Apoio Psicológico",              detail: "Apoio terapêutico para a Kerlen e sua família" },
-                    { item: "Inclusão Escolar",               detail: "Materiais adaptados e cuidadores" },
-                  ].map(({ item, detail }) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                      <span><strong>{item}:</strong> {detail}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <div className="rounded-lg border border-border/60 p-5">
+                    <p className="mb-3 text-sm font-semibold text-foreground">
+                      Como sua doação vai ajudar:
+                    </p>
+                    <ul className="space-y-2.5 text-sm">
+                      {[
+                        { item: "Acompanhamento Multidisciplinar", detail: "Fisioterapia, Terapia Ocupacional e Ortopedia" },
+                        { item: "Adaptações Físicas",             detail: "Cadeiras e assentos posturais sob medida" },
+                        { item: "Apoio Psicológico",              detail: "Apoio terapêutico para a Kerlen e sua família" },
+                        { item: "Inclusão Escolar",               detail: "Materiais adaptados e cuidadores" },
+                      ].map(({ item, detail }) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                          <span><strong>{item}:</strong> {detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="animate-fade-in-up space-y-5">
+                  <h2 className="text-xl font-bold text-foreground mb-3">O que é Agenesia de Membros?</h2>
+                  <p className="text-foreground/80 mb-3">
+                    É uma condição rara em que, durante a gestação, ocorre a ausência ou o desenvolvimento incompleto dos braços e pernas. Para a Kerlen, isso significa que coisas simples do dia a dia, como sentar, brincar ou comer, exigem muito mais esforço.
+                  </p>
+                  <p className="text-foreground/80">
+                    Mesmo com essa condição, a inteligência e a vontade de viver da Kerlen são gigantes! Ela não tem nenhuma limitação cognitiva. Tudo o que ela precisa são das <strong>ferramentas e tratamentos adequados</strong> para conseguir interagir com o mundo ao seu redor.
+                  </p>
+                </div>
+              )}
 
-              <div id="doe-agora" className="pt-1">
+              <div id="doe-agora" className="pt-6">
                 <button onClick={onDonateClick} className="btn-primary w-full py-4 text-[15px]" id="mid-cta">
                   Quero ajudar a Kerlen
                 </button>
@@ -271,7 +299,7 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
             </article>
 
             {/* ── Comentários ───────────────────────────────── */}
-            <div className="mt-14">
+            <div id="comentarios" className="mt-14">
               <h2 className="mb-6 flex items-center gap-2 text-2xl text-foreground">
                 <MessageCircle className="h-5 w-5 text-primary" />
                 Quem já ajudou
@@ -334,8 +362,8 @@ export const DonationCampaign = ({ onDonateClick }: Props) => {
                 />
                 <div className="text-xs text-muted-foreground">
                   <p className="text-sm font-semibold text-foreground">Instituto Impacto Positivo</p>
+                  <p className="select-none pointer-events-none text-primary font-medium">CNPJ: 49.190.870/0001-60</p>
                   <p>Verificado · Ativo desde maio/2025</p>
-                  <p>3 campanhas · 8 apoiadas</p>
                 </div>
               </div>
 

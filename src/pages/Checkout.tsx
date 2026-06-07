@@ -79,10 +79,10 @@ const Checkout = () => {
 
   // ── Step 2: Dados pessoais ──────────────────────────────────
   const [nome, setNome] = useState("");
-  const [sobrenome, setSobrenome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [loadingStep2, setLoadingStep2] = useState(false);
 
   useEffect(() => {
     if (initial > 0) setAmount(initial);
@@ -101,14 +101,18 @@ const Checkout = () => {
   };
 
   // ── Step 2 validation ───────────────────────────────────────
-  const formValid = nome.trim().length >= 2 && sobrenome.trim().length >= 1 && isValidEmail(email);
+  const formValid = nome.trim().length >= 2 && isValidEmail(email);
 
   const goToStep2 = () => {
     if (!valid) return;
-    setStep(2);
-    // Funil TikTok: o usuário INICIOU o checkout ao chegar no formulário
-    trackInitiateCheckout(total);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setLoadingStep2(true);
+    // Pequeno feedback visual artificial para não parecer que travou
+    setTimeout(() => {
+      setStep(2);
+      setLoadingStep2(false);
+      trackInitiateCheckout(total);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 400);
   };
 
   const goBackToStep1 = () => {
@@ -129,7 +133,7 @@ const Checkout = () => {
       const { data, error: fnErr } = await supabase.functions.invoke("create-inter-pix", {
         body: { 
           amount: totalCents,
-          donor_name: `${nome.trim()} ${sobrenome.trim()}`.trim(),
+          donor_name: nome.trim(),
           donor_email: email.trim(),
           donor_phone: telefone.replace(/\D/g, ""),
           ttclid: getTtclid() || undefined,
@@ -278,8 +282,9 @@ const Checkout = () => {
 
 
               <div className="mt-3">
-                <label htmlFor="custom-amount" className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                  Ou digite outro valor:
+                <label htmlFor="custom-amount" className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                  <span>Ou digite outro valor:</span>
+                  <span className="text-[10px] opacity-70">Inclua os centavos</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">R$</span>
@@ -289,7 +294,7 @@ const Checkout = () => {
                     inputMode="numeric"
                     value={amount > 0 ? formatBRL(amount) : ""}
                     onChange={handleInput}
-                    placeholder="0,00"
+                    placeholder="50,00"
                     className="w-full rounded-xl border-2 border-border bg-muted/50 py-3 pl-9 pr-4 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary focus:bg-white"
                   />
                 </div>
@@ -333,12 +338,18 @@ const Checkout = () => {
 
               <button
                 onClick={goToStep2}
-                disabled={!valid}
-                className="btn-primary mt-5 w-full py-4 text-base"
+                disabled={!valid || loadingStep2}
+                className="btn-primary mt-5 w-full py-4 text-base relative overflow-hidden transition-all active:scale-[0.98]"
                 id="checkout-continue"
               >
-                <Heart className="h-5 w-5 fill-white" />
-                Ajudar a Kerlen com R$ {formatBRL(total)}
+                {loadingStep2 ? (
+                  <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <Heart className="h-5 w-5 fill-white" />
+                    Ajudar a Kerlen com R$ {formatBRL(total)}
+                  </>
+                )}
               </button>
 
               <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
@@ -363,31 +374,15 @@ const Checkout = () => {
                 {/* Nome */}
                 <div>
                   <label htmlFor="donor-name" className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <User className="h-3.5 w-3.5" /> Nome
+                    <User className="h-3.5 w-3.5" /> Nome completo
                   </label>
                   <input
                     id="donor-name"
                     type="text"
-                    autoComplete="given-name"
+                    autoComplete="name"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    placeholder="Seu nome"
-                    className="w-full rounded-xl border-2 border-border bg-muted/50 px-4 py-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white"
-                  />
-                </div>
-
-                {/* Sobrenome */}
-                <div>
-                  <label htmlFor="donor-surname" className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <User className="h-3.5 w-3.5" /> Sobrenome
-                  </label>
-                  <input
-                    id="donor-surname"
-                    type="text"
-                    autoComplete="family-name"
-                    value={sobrenome}
-                    onChange={(e) => setSobrenome(e.target.value)}
-                    placeholder="Seu sobrenome"
+                    placeholder="Seu nome completo"
                     className="w-full rounded-xl border-2 border-border bg-muted/50 px-4 py-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white"
                   />
                 </div>
@@ -460,11 +455,11 @@ const Checkout = () => {
             </div>
 
             {/* Selo de segurança */}
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card">
+            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card pointer-events-none select-none">
               <img src={seloSeguranca} alt="Selo de segurança" className="h-12 flex-shrink-0 object-contain" />
               <p className="text-xs text-muted-foreground">
-                Garantimos uma <strong>experiência 100% segura</strong>. Sua doação chega diretamente
-                gerenciada pelo Instituto Impacto Positivo e repassada
+                Garantimos uma <strong>experiência 100% segura</strong>. Sua doação é
+                gerenciada pelo Instituto Impacto Positivo (CNPJ: 49.190.870/0001-60) e repassada
                 integralmente à família da Kerlen.
               </p>
             </div>
@@ -478,11 +473,11 @@ const Checkout = () => {
         {/* Selo (apenas no step 1) */}
         {step === 1 && (
           <>
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card">
+            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card pointer-events-none select-none">
               <img src={seloSeguranca} alt="Selo de segurança" className="h-12 flex-shrink-0 object-contain" />
               <p className="text-xs text-muted-foreground">
-                Garantimos uma <strong>experiência 100% segura</strong>. Sua doação chega diretamente
-                gerenciada pelo Instituto Impacto Positivo e repassada
+                Garantimos uma <strong>experiência 100% segura</strong>. Sua doação é
+                gerenciada pelo Instituto Impacto Positivo (CNPJ: 49.190.870/0001-60) e repassada
                 integralmente à família da Kerlen.
               </p>
             </div>
