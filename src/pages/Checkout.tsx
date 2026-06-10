@@ -7,18 +7,18 @@ import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { trackInitiateCheckout } from "@/lib/facebookPixel";
-const PRESETS = [25, 50, 100, 250];
-const POPULAR = 50;
-const MIN = 20;
+const PRESETS = [10, 25, 50, 100];
+const POPULAR = 25;
+const MIN = 5;
 const MAX = 2000;
 
 // Impacto tangível por valor — ancora a decisão no benefício concreto
 const IMPACT: Record<number, string> = {
+  10:  "1 curativo especializado",
   25:  "1 sessão de fisioterapia",
-  35:  "1 dia de insumos essenciais",
   50:  "1 semana de insumos",
   75:  "1 consulta especializada",
-  100: "1 consulta médica",
+  100: "1 consulta médica completa",
   150: "1 mês de terapia ocupacional",
   200: "kit de adaptação",
   250: "1 mês de suporte completo",
@@ -81,6 +81,8 @@ const Checkout = () => {
   const [telefone, setTelefone] = useState("");
   const [processing, setProcessing] = useState(false);
   const [loadingStep2, setLoadingStep2] = useState(false);
+  // UUID gerado no frontend para desduplicação Pixel ↔ CAPI do Facebook
+  const [fbEventId, setFbEventId] = useState("");
 
   useEffect(() => {
     if (initial > 0) setAmount(initial);
@@ -104,11 +106,14 @@ const Checkout = () => {
   const goToStep2 = () => {
     if (!valid) return;
     setLoadingStep2(true);
-    // Pequeno feedback visual artificial para não parecer que travou
+    // Gera UUID único compartilhado com o Pixel e o Supabase (CAPI)
+    // Isso permite ao Facebook desduplicar e não contar como 2 eventos.
+    const eventId = crypto.randomUUID();
+    setFbEventId(eventId);
     setTimeout(() => {
       setStep(2);
       setLoadingStep2(false);
-      trackInitiateCheckout(total);
+      trackInitiateCheckout(total, eventId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 400);
   };
@@ -132,6 +137,7 @@ const Checkout = () => {
           donor_email: email.trim(),
           donor_phone: telefone.replace(/\D/g, ""),
           url: window.location.href,
+          fb_event_id: fbEventId || undefined,
         },
       });
       if (fnErr || !data?.qr_code) throw fnErr || new Error("Falha ao gerar PIX");
@@ -238,47 +244,52 @@ const Checkout = () => {
               <h2 className="mb-1 text-sm font-bold text-foreground">Escolha o valor da sua doação</h2>
               <p className="mb-4 text-xs text-muted-foreground">Cada valor tem um impacto direto na vida da Kerlen</p>
 
-              <div className="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-4">
+              {/* Impact Cards — hierarquia invertida: impacto > valor */}
+              <div className="grid grid-cols-2 gap-3">
                 {PRESETS.map((p) => {
                   const isPopular = p === POPULAR;
                   const isSelected = amount === p;
                   return (
                     <div key={p} className="relative">
                       {isPopular && (
-                        <span className="absolute -top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-accent-foreground shadow">
+                        <span className="absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[9px] font-bold text-accent-foreground shadow-sm">
                           <Crown className="h-2.5 w-2.5" /> + escolhido
                         </span>
                       )}
                       <button
                         onClick={() => setAmount(p)}
-                        className={`w-full rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all hover:-translate-y-0.5 ${
+                        className={`group relative w-full overflow-hidden rounded-2xl border-2 px-3 py-4 text-left transition-all duration-200 active:scale-95 ${
                           isSelected
-                            ? "border-primary bg-primary text-white shadow-elevated"
-                            : isPopular
-                              ? "border-accent/60 bg-accent/5 text-foreground hover:border-accent"
-                              : "border-border bg-white text-foreground hover:border-primary/50"
+                            ? "border-primary bg-primary shadow-elevated"
+                            : "border-border bg-white hover:border-primary/40 hover:shadow-card"
                         }`}
                       >
-                        <span className="block">R$ {p.toLocaleString("pt-BR")},00</span>
+                        {/* Impacto em destaque — o "produto" emocional */}
                         {IMPACT[p] && (
-                          <span className={`mt-0.5 block text-[9px] font-medium leading-tight ${
-                            isSelected ? "text-white/80" : "text-muted-foreground"
+                          <span className={`block text-[13px] font-bold leading-snug ${
+                            isSelected ? "text-white" : "text-foreground"
                           }`}>
                             {IMPACT[p]}
                           </span>
                         )}
+                        {/* Valor como badge secundário */}
+                        <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-primary/8 text-primary"
+                        }`}>
+                          R$ {p.toLocaleString("pt-BR")},00
+                        </span>
                       </button>
                     </div>
                   );
                 })}
               </div>
 
-
-
-              <div className="mt-3">
+              <div className="mt-4">
                 <label htmlFor="custom-amount" className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                  <span>Ou digite outro valor:</span>
-                  <span className="text-[10px] opacity-70">Inclua os centavos</span>
+                  <span>Ou digite outro valor (mín. R$ 5):</span>
+                  <span className="text-[10px] opacity-70">Ex: 15,00</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">R$</span>
@@ -288,7 +299,7 @@ const Checkout = () => {
                     inputMode="numeric"
                     value={amount > 0 ? formatBRL(amount) : ""}
                     onChange={handleInput}
-                    placeholder="50,00"
+                    placeholder="15,00"
                     className="w-full rounded-xl border-2 border-border bg-muted/50 py-3 pl-9 pr-4 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary focus:bg-white"
                   />
                 </div>

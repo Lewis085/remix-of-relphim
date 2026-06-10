@@ -449,9 +449,11 @@ Deno.serve(async (req) => {
     }
 
     // Dispara CAPI: InitiateCheckout
+    // Usa o fb_event_id gerado no frontend para desduplicar com o Pixel.
+    // Se o frontend não enviou, cai de volta para txid.
     sendFacebookCapi({
       eventName: "InitiateCheckout",
-      eventId: txid,
+      eventId: body?.fb_event_id || txid,
       amount: valor,
       url: body?.url,
       ipAddress,
