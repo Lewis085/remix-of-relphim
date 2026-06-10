@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { trackInitiateCheckout } from "@/lib/facebookPixel";
 const PRESETS = [25, 50, 90, 120, 200, 300];
 const POPULAR = 50;
-const MIN = 5;
+const MIN = 20;
 const MAX = 2000;
 
 // Impacto tangível por valor — ancora a decisão no benefício concreto
@@ -285,8 +285,8 @@ const Checkout = () => {
 
               <div className="mt-4">
                 <label htmlFor="custom-amount" className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                  <span>Ou digite outro valor (mín. R$ 5):</span>
-                  <span className="text-[10px] opacity-70">Ex: 15,00</span>
+                  <span>Ou digite outro valor (mín. R$ 20):</span>
+                  <span className="text-[10px] opacity-70">Ex: 35,00</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">R$</span>
@@ -296,7 +296,7 @@ const Checkout = () => {
                     inputMode="numeric"
                     value={amount > 0 ? formatBRL(amount) : ""}
                     onChange={handleInput}
-                    placeholder="15,00"
+                    placeholder="35,00"
                     className="w-full rounded-xl border-2 border-border bg-muted/50 py-3 pl-9 pr-4 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary focus:bg-white"
                   />
                 </div>
