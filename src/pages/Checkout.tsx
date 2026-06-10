@@ -7,22 +7,19 @@ import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { trackInitiateCheckout } from "@/lib/facebookPixel";
-const PRESETS = [10, 25, 50, 100];
-const POPULAR = 25;
+const PRESETS = [25, 50, 90, 120, 200, 300];
+const POPULAR = 50;
 const MIN = 5;
 const MAX = 2000;
 
 // Impacto tangível por valor — ancora a decisão no benefício concreto
 const IMPACT: Record<number, string> = {
-  10:  "1 curativo especializado",
-  25:  "1 sessão de fisioterapia",
-  50:  "1 semana de insumos",
-  75:  "1 consulta especializada",
-  100: "1 consulta médica completa",
-  150: "1 mês de terapia ocupacional",
-  200: "kit de adaptação",
-  250: "1 mês de suporte completo",
-  350: "cadeira adaptada parcial",
+  25:  "Alívio imediato e sem dor",
+  50:  "Movimento, conforto e evolução",
+  90:  "Uma semana inteira de paz",
+  120: "Segurança médica especialista",
+  200: "Um mês de cuidado essencial",
+  300: "Tratamento completo garantido",
 };
 
 
