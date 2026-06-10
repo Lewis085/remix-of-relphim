@@ -6,9 +6,7 @@ import seloSeguranca from "@/assets/selo-seguranca.webp";
 import pixLogo from "@/assets/pix-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { trackInitiateCheckout, trackIdentify, getTtclid } from "@/lib/tiktokPixel";
-
-// ── Configuração de preços (psicologia de ancoragem) ──────────
+import { trackInitiateCheckout } from "@/lib/facebookPixel";
 const PRESETS = [25, 50, 100, 250];
 const POPULAR = 50;
 const MIN = 20;
@@ -124,9 +122,6 @@ const Checkout = () => {
     if (!valid || !formValid) return;
     setProcessing(true);
 
-    // Advanced Matching: envia email/telefone pro TikTok cruzar com a base de usuários
-    trackIdentify(email, telefone);
-
     try {
       const totalCents = Math.round(total * 100);
 
@@ -136,7 +131,6 @@ const Checkout = () => {
           donor_name: nome.trim(),
           donor_email: email.trim(),
           donor_phone: telefone.replace(/\D/g, ""),
-          ttclid: getTtclid() || undefined,
           url: window.location.href,
         },
       });

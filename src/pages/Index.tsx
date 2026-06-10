@@ -4,7 +4,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DonationCampaign } from "@/components/DonationCampaign";
 import { DonationNotification } from "@/components/DonationNotification";
-import { trackViewContent } from "@/lib/tiktokPixel";
+
+import { trackViewContent } from "@/lib/facebookPixel";
 
 const Index = () => {
   const navigate = useNavigate();

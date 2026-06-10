@@ -1,59 +1,66 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-// ── TikTok CAPI (inlined) ─────────────────────────────────────
+// ── Facebook CAPI (inlined) ─────────────────────────────────────
 async function hashSha256(str: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-interface TikTokCapiData {
+interface FacebookCapiData {
   eventName: "InitiateCheckout" | "Purchase";
   eventId: string;
   amount: string | number;
   url?: string;
-  ttclid?: string;
   ipAddress?: string;
   userAgent?: string;
   donorEmail?: string;
   donorPhone?: string;
 }
 
-async function sendTikTokCapi(data: TikTokCapiData) {
-  const TIKTOK_PIXEL_ID = "D8HOVS3C77U6KT5C1000";
-  const TIKTOK_ACCESS_TOKEN = "34e4f1ccd1e5f16cdd94c46bb052af7e6f02838a";
-  const payload: any = {
-    pixel_code: TIKTOK_PIXEL_ID,
-    event: data.eventName,
-    event_id: data.eventId,
-    event_time: Math.floor(Date.now() / 1000),
-    context: {
-      page: { url: data.url || "https://dudapacientezero.com.br/checkout" },
-      user: {
-        ttclid: data.ttclid || undefined,
-        ip: data.ipAddress || undefined,
-        user_agent: data.userAgent || undefined,
-      }
-    },
-    properties: {
-      contents: [{ price: Number(data.amount), quantity: 1, content_id: "doacao-kerlen", content_type: "product", content_name: "Doação Kerlen" }],
-      value: Number(data.amount),
-      currency: "BRL"
-    }
+async function sendFacebookCapi(data: FacebookCapiData) {
+  const FB_PIXEL_ID = "3789383634536507";
+  const FB_ACCESS_TOKEN = "EAAbLLoCQTbYBRhO9XfVhm4Ul6i7RFF1JbECZCDZB2xdXK9Q9ALnXNTF47H9AqCxd4K1TVEg8MWZCgfM0u3YkUmyL7rMh6ogPXPSqqYa6epcbUHtJqRqVZBxG11DFA9AeDR3hD5h4h4y2ce7hZAR6JQMhyzUGE8ZBZAPodK4f4jgZAZCZA3xgKO4jQZALZBrUkhX4ZAs6XoQZDZD";
+  
+  const userData: any = {
+    client_ip_address: data.ipAddress,
+    client_user_agent: data.userAgent,
   };
-  if (data.donorEmail) payload.context.user.email = await hashSha256(data.donorEmail.trim().toLowerCase());
+
+  if (data.donorEmail) userData.em = await hashSha256(data.donorEmail.trim().toLowerCase());
   if (data.donorPhone) {
     const cleanPhone = data.donorPhone.replace(/\D/g, "");
-    if (cleanPhone.length >= 10) payload.context.user.phone_number = await hashSha256(`+55${cleanPhone}`);
+    if (cleanPhone.length >= 10) userData.ph = await hashSha256(`55${cleanPhone}`);
   }
+
+  const payload = {
+    data: [
+      {
+        event_name: data.eventName,
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: "website",
+        event_id: data.eventId,
+        event_source_url: data.url || "https://dudapacientezero.com.br/",
+        user_data: userData,
+        custom_data: {
+          currency: "BRL",
+          value: Number(data.amount),
+          content_ids: ["doacao-kerlen"],
+          content_type: "product",
+          content_name: "Doação Kerlen"
+        }
+      }
+    ]
+  };
+
   try {
-    const response = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
+    const response = await fetch(`https://graph.facebook.com/v20.0/${FB_PIXEL_ID}/events?access_token=${FB_ACCESS_TOKEN}`, {
       method: "POST",
-      headers: { "Access-Token": TIKTOK_ACCESS_TOKEN, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) { const errText = await response.text(); console.warn(`TikTok CAPI falhou para ${data.eventName}:`, response.status, errText); }
-    else { const respJson = await response.json(); console.log(`TikTok CAPI sucesso para ${data.eventName}:`, respJson); }
-  } catch (err) { console.error(`Erro ao disparar TikTok CAPI (${data.eventName}):`, err); }
+    if (!response.ok) { const errText = await response.text(); console.warn(`FB CAPI falhou para ${data.eventName}:`, response.status, errText); }
+    else { const respJson = await response.json(); console.log(`FB CAPI sucesso para ${data.eventName}:`, respJson); }
+  } catch (err) { console.error(`Erro ao disparar FB CAPI (${data.eventName}):`, err); }
 }
 
 // ── Utmify (inlined) ──────────────────────────────────────────
@@ -166,13 +173,12 @@ Deno.serve(async (req) => {
 
       // 4. TikTok CAPI & Utmify (Purchase / Paid)
       if (tx) {
-        // TikTok
-        await sendTikTokCapi({
+        // Facebook
+        await sendFacebookCapi({
           eventName: "Purchase",
           eventId: txid,
           amount: valor,
           url: tx.url,
-          ttclid: tx.ttclid,
           ipAddress: tx.ip_address,
           userAgent: tx.user_agent,
           donorEmail: tx.donor_email,

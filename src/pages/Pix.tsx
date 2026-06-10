@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { VakinhaLogo } from "@/components/VakinhaLogo";
 import { toast } from "@/hooks/use-toast";
-import { trackPurchase } from "@/lib/tiktokPixel";
+import { trackPurchase } from "@/lib/facebookPixel";
 import { supabase } from "@/integrations/supabase/client";
 import pixLogo from "@/assets/pix-logo.png";
 
