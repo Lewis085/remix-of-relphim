@@ -304,29 +304,6 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Forma de pagamento */}
-            <div className="mt-4 rounded-2xl bg-white p-5 shadow-card">
-              <h2 className="mb-3 text-sm font-bold text-foreground">Forma de pagamento</h2>
-              <div className="flex items-center gap-3 rounded-xl border-2 border-primary bg-primary/5 px-4 py-3">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-primary">
-                  <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                </span>
-                <span className="font-bold text-primary">PIX</span>
-                <span
-                  aria-hidden="true"
-                  className="ml-auto h-5 w-5 bg-primary"
-                  style={{
-                    WebkitMaskImage: `url(${pixLogo})`, maskImage: `url(${pixLogo})`,
-                    WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-                    WebkitMaskSize: "contain", maskSize: "contain",
-                    WebkitMaskPosition: "center", maskPosition: "center",
-                  }}
-                />
-                <span className="text-xs font-semibold text-primary/70">Instantâneo</span>
-              </div>
-            </div>
-
-
 
             {/* Resumo + CTA "Continuar" */}
             <div className="mt-4 rounded-2xl bg-white p-5 shadow-card">
