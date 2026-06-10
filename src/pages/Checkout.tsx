@@ -85,6 +85,10 @@ const Checkout = () => {
     if (initial > 0) setAmount(initial);
   }, [initial]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const total = amount;
   const valid = total >= MIN && total <= MAX;
 
