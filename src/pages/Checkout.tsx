@@ -14,12 +14,12 @@ const MAX = 2000;
 
 // Impacto tangível por valor — ancora a decisão no benefício concreto
 const IMPACT: Record<number, string> = {
-  25:  "Alívio imediato e sem dor",
-  50:  "Movimento, conforto e evolução",
-  90:  "Uma semana inteira de paz",
-  120: "Segurança médica especialista",
-  200: "Um mês de cuidado essencial",
-  300: "Tratamento completo garantido",
+  25:  "Alívio sem dor",
+  50:  "Fisio e conforto",
+  90:  "1 semana de paz",
+  120: "Apoio médico",
+  200: "1 mês de cuidado",
+  300: "Cuidado completo",
 };
 
 
@@ -247,7 +247,7 @@ const Checkout = () => {
                   const isPopular = p === POPULAR;
                   const isSelected = amount === p;
                   return (
-                    <div key={p} className="relative">
+                    <div key={p} className="relative h-full">
                       {isPopular && (
                         <span className="absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[9px] font-bold text-accent-foreground shadow-sm">
                           <Crown className="h-2.5 w-2.5" /> + escolhido
@@ -255,7 +255,7 @@ const Checkout = () => {
                       )}
                       <button
                         onClick={() => setAmount(p)}
-                        className={`group relative w-full overflow-hidden rounded-2xl border-2 px-3 py-4 text-left transition-all duration-200 active:scale-95 ${
+                        className={`group relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl border-2 px-3 py-3.5 text-left transition-all duration-200 active:scale-95 ${
                           isSelected
                             ? "border-primary bg-primary shadow-elevated"
                             : "border-border bg-white hover:border-primary/40 hover:shadow-card"
@@ -263,14 +263,14 @@ const Checkout = () => {
                       >
                         {/* Impacto em destaque — o "produto" emocional */}
                         {IMPACT[p] && (
-                          <span className={`block text-[13px] font-bold leading-snug ${
+                          <span className={`block text-xs font-bold leading-tight sm:text-[13px] ${
                             isSelected ? "text-white" : "text-foreground"
                           }`}>
                             {IMPACT[p]}
                           </span>
                         )}
                         {/* Valor como badge secundário */}
-                        <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                        <span className={`mt-2.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
                           isSelected
                             ? "bg-white/20 text-white"
                             : "bg-primary/8 text-primary"
